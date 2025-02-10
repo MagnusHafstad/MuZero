@@ -1,8 +1,7 @@
 # MuZero
 
 
-##Setup 
-
+## Setup 
 For first setup create a venv: `python -m venv venv`
 
 Activate venv: `./venv/Scripts/activate`
