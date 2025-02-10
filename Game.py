@@ -54,15 +54,15 @@ class Snake():
         elif self.board.all() == 1:
             self.state = "Win"
     
-
-
-    
+    def get_board(self) -> np.array:
+        return self.board
 
     def game_loop(self) -> None:
         while self.state == "playing":
             self.get_next_location()
             self.set_next_state()
             print(self.board)
+            #Update GUI
         print(self.state)
 
 
