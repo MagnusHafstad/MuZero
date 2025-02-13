@@ -44,6 +44,8 @@ class Snake():
         
         if next_location[0] > len(self.board)-1 or next_location[1] > len(self.board)-1:
             self.state = "game_over"
+        elif next_location[0] < 0 or next_location[1] < 0:
+            self.state = "game_over"
         elif self.board[next_location[0], next_location[1]] == 1:
             self.state = "game_over"
 
