@@ -87,6 +87,3 @@ class Snake():
 
         
 
-        
-snake = Snake(5)
-snake.game_loop()
