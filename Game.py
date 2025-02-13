@@ -1,8 +1,9 @@
 import pygame
 import numpy as np
+import snake_gui
 
 class Snake():
-    def __init__(self, size):
+    def __init__(self, size, head=True):
         # 0 is empty, 1 is snake, 2 is food
         food = 2
         snake = 1
@@ -12,6 +13,11 @@ class Snake():
         self.board[self.snake[0][0], self.snake[0][1]] = snake
         self.board[(len(self.board)//2,len(self.board)//2)] = food  
         self.state = "playing"
+        self.head = head
+        if self.head:
+            self.gui = snake_gui.SnakeGUI(size)
+            self.clock = pygame.time.Clock()
+
 
         
     
@@ -65,8 +71,13 @@ class Snake():
 
     def game_loop(self) -> None:
         while self.state == "playing":
+            if self.head:
+                self.clock.tick(3)
+                self.direction = self.gui.user_input(self.direction)
             self.get_next_location()
             self.set_next_state()
+            if self.head:
+                self.gui.update_gui(self.board)
             print(self.board)
             #Update GUI
         print(self.state)
