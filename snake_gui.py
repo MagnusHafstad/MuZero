@@ -66,5 +66,5 @@ def game_loop(self) -> None:
 
 
 if __name__ == "__main__":
-     snake = SnakeGUI(10)
+     snake = SnakeGUI(8)
      snake.run()
