@@ -40,6 +40,3 @@ class SnakeGUI:
 
 
 
-if __name__ == "__main__":
-     snake = SnakeGUI(8)
-     snake.run()
