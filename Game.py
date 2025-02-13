@@ -56,6 +56,12 @@ class Snake():
     
     def get_board(self) -> np.array:
         return self.board
+    
+    def get_direction(self) -> str:
+        return self.direction
+    
+    def set_direction(self, direction: str) -> None:
+        self.direction = direction
 
     def game_loop(self) -> None:
         while self.state == "playing":
