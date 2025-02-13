@@ -2,112 +2,69 @@ import pygame
 import pygame_gui
 import numpy as np
 
-matrix_size = 10
-cell_size = 60
-
-play_grid = (matrix_size*cell_size, matrix_size*cell_size)
-
-background_color =(255,0,0)
-black = (0,0,0)
-
-color_map = {0:(255,33,0), 1: (0,222,0),2: (0,0,222)} 
+from Game import Snake
 
 
-matrix = np.random.randint(0,3, size = (matrix_size,matrix_size))
 
+class SnakeGUI:
+    def __init__(self, matrix_size):
+        pygame.init()
+        self.matrix_size = matrix_size
+        self.cell_size = 60
+        self.play_grid = (matrix_size*self.cell_size, matrix_size*self.cell_size)
+        self.snake_game = Snake(matrix_size)
+        self.color_map = {0:(255,255,255), 1: (0,255,0),2: (255,0,0)} 
+        self.window_surface = pygame.display.set_mode(self.play_grid)
 
-def initialize_snake_gui():
-    play_grid = (matrix_size*cell_size, matrix_size*cell_size)
+        self.manager = pygame_gui.UIManager(self.play_grid)
 
-    color_map = {0:(255,33,0), 1: (0,222,0),2: (0,0,222)} 
+        self.background = pygame.Surface(self.play_grid)
+        self.background.fill(pygame.Color(self.color_map[0]))
 
-
-    matrix = np.random.randint(0,3, size = (matrix_size,matrix_size))
-     
-
-
-pygame.init()
-
-pygame.display.set_caption('Quick Start')
-window_surface = pygame.display.set_mode(play_grid)
-
-manager = pygame_gui.UIManager(play_grid)
-
-background = pygame.Surface(play_grid)
-background.fill(pygame.Color(background_color))
-
-clock = pygame.time.Clock()
-is_running = True
-
-while is_running:
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            is_running = False
-
-    for row in range(matrix_size):
-            for col in range(matrix_size):
-                color = color_map[matrix[row][col]]
-                pygame.draw.rect(window_surface, color, (col * cell_size, row * cell_size, cell_size, cell_size))
-
-        # Update display
-    pygame.display.flip()
-    matrix = np.random.randint(0,3, size = (matrix_size,matrix_size))
-    clock.tick(1)
-
-# Quit pygame
-pygame.quit()
-
-def run():
-    matrix_size = 10
-    cell_size = 60
-
-    play_grid = (matrix_size*cell_size, matrix_size*cell_size)
-
-    background_color =(255,0,0)
-    black = (0,0,0)
-
-    color_map = {0:(255,33,0), 1: (0,222,0),2: (0,0,222)} 
-
-
-    matrix = np.random.randint(0,3, size = (matrix_size,matrix_size))
-
-    pygame.init()
-
-    pygame.display.set_caption('Quick Start')
-    window_surface = pygame.display.set_mode(play_grid)
-
-    manager = pygame_gui.UIManager(play_grid)
-
-    background = pygame.Surface(play_grid)
-    background.fill(pygame.Color(background_color))
-
-    clock = pygame.time.Clock()
-    is_running = True
-
-    while is_running:
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                is_running = False
-
-        for row in range(matrix_size):
-                for col in range(matrix_size):
-                    color = color_map[matrix[row][col]]
-                    pygame.draw.rect(window_surface, color, (col * cell_size, row * cell_size, cell_size, cell_size))
-
-            # Update display
+    def update_gui(self, matrix):
+        for row in range(self.matrix_size):
+                for col in range(self.matrix_size):
+                    color = self.color_map[matrix[row][col]]
+                    pygame.draw.rect(self.window_surface, color, (col * self.cell_size, row * self.cell_size, self.cell_size, self.cell_size))
         pygame.display.flip()
-        matrix = np.random.randint(0,3, size = (matrix_size,matrix_size))
-        #clock.tick(0.00001)
-        pygame.time.wait(1000)
 
-    # Quit pygame
-    pygame.quit()
+    def game_loop(self):
+        self.snake_game.get_next_location()
+        self.snake_game.set_next_state()
+        self.update_gui(self.snake_game.get_board())
+              
+
+    def run(self): 
+        state = self.snake_game.get_board()
+
+        clock = pygame.time.Clock()
+        is_running = True
+
+        while is_running:
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    is_running = False
+
+            self.game_loop()
+
+            clock.tick(3)
+
+        # Quit pygame
+        pygame.quit()
 
 
 
 
+def game_loop(self) -> None:
+        while self.state == "playing":
+            self.get_next_location()
+            self.set_next_state()
+            print(self.board)
+            #Update GUI
+        print(self.state)
 
 
-
+if __name__ == "__main__":
+     snake = SnakeGUI(10)
+     snake.run()
