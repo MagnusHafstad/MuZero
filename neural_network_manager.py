@@ -116,8 +116,8 @@ class NeuralNetworkManager:
     def predict(self, state):
         """Deploys the trained networks to make predictions from a given game state."""
         with torch.no_grad():
-            latent_state = self.representation_network(state)
-            policy, value = self.prediction_network(latent_state)
+            abstract_state = self.representation_network(state)
+            policy, value = self.prediction_network(abstract_state)
         return policy, value
 
 # Example Usage
