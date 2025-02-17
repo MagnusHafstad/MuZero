@@ -5,31 +5,42 @@ import torch.nn.functional as F
 
 class RepresentationNetwork(nn.Module):
     """Representation Network (NNr) - Maps raw observations to latent state representations."""
-    def __init__(self, input_dim, latent_dim):
+    def __init__(self, input_dim, latent_dim, hidden_layers, activation_func):
         super().__init__()
-        self.fc = nn.Sequential(
-            nn.Linear(input_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, latent_dim)
-        )
+        layers = []
+        prev_dim = input_dim
+        
+        for hidden_dim in hidden_layers:
+            layers.append(nn.Linear(prev_dim, hidden_dim))
+            layers.append(activation_func())
+            prev_dim = hidden_dim
+        
+        layers.append(nn.Linear(prev_dim, latent_dim))
+        self.fc = nn.Sequential(*layers)
     
     def forward(self, x):
         return self.fc(x)
 
 class DynamicsNetwork(nn.Module):
     """Dynamics Network (NNd) - Predicts next state and reward given a latent state and action."""
-    def __init__(self, latent_dim, action_dim):
+    def __init__(self, latent_dim, action_dim, hidden_layers, activation_func):
         super().__init__()
-        self.fc_state = nn.Sequential(
-            nn.Linear(latent_dim + action_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, latent_dim)
-        )
-        self.fc_reward = nn.Sequential(
-            nn.Linear(latent_dim + action_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, 1)
-        )
+        layers_state = []
+        layers_reward = []
+        prev_dim = latent_dim + action_dim
+        
+        for hidden_dim in hidden_layers:
+            layers_state.append(nn.Linear(prev_dim, hidden_dim))
+            layers_state.append(activation_func())
+            layers_reward.append(nn.Linear(prev_dim, hidden_dim))
+            layers_reward.append(activation_func())
+            prev_dim = hidden_dim
+        
+        layers_state.append(nn.Linear(prev_dim, latent_dim))
+        layers_reward.append(nn.Linear(prev_dim, 1))
+        
+        self.fc_state = nn.Sequential(*layers_state)
+        self.fc_reward = nn.Sequential(*layers_reward)
     
     def forward(self, latent_state, action):
         x = torch.cat([latent_state, action], dim=-1)
@@ -39,19 +50,25 @@ class DynamicsNetwork(nn.Module):
 
 class PredictionNetwork(nn.Module):
     """Prediction Network (NNp) - Outputs policy and value estimates from a latent state."""
-    def __init__(self, latent_dim, action_dim):
+    def __init__(self, latent_dim, action_dim, hidden_layers, activation_func):
         super().__init__()
-        self.fc_policy = nn.Sequential(
-            nn.Linear(latent_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, action_dim),
-            nn.Softmax(dim=-1)
-        )
-        self.fc_value = nn.Sequential(
-            nn.Linear(latent_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, 1)
-        )
+        layers_policy = []
+        layers_value = []
+        prev_dim = latent_dim
+        
+        for hidden_dim in hidden_layers:
+            layers_policy.append(nn.Linear(prev_dim, hidden_dim))
+            layers_policy.append(activation_func())
+            layers_value.append(nn.Linear(prev_dim, hidden_dim))
+            layers_value.append(activation_func())
+            prev_dim = hidden_dim
+        
+        layers_policy.append(nn.Linear(prev_dim, action_dim))
+        layers_policy.append(nn.Softmax(dim=-1))
+        layers_value.append(nn.Linear(prev_dim, 1))
+        
+        self.fc_policy = nn.Sequential(*layers_policy)
+        self.fc_value = nn.Sequential(*layers_value)
     
     def forward(self, latent_state):
         policy = self.fc_policy(latent_state)
@@ -60,10 +77,10 @@ class PredictionNetwork(nn.Module):
 
 class NeuralNetworkManager:
     """Manages the training and deployment of MuZero’s three neural networks."""
-    def __init__(self, input_dim, latent_dim, action_dim, lr=0.001):
-        self.representation_network = RepresentationNetwork(input_dim, latent_dim)
-        self.dynamics_network = DynamicsNetwork(latent_dim, action_dim)
-        self.prediction_network = PredictionNetwork(latent_dim, action_dim)
+    def __init__(self, input_dim, latent_dim, action_dim, hidden_layers, activation_func, lr=0.001):
+        self.representation_network = RepresentationNetwork(input_dim, latent_dim, hidden_layers, activation_func)
+        self.dynamics_network = DynamicsNetwork(latent_dim, action_dim, hidden_layers, activation_func)
+        self.prediction_network = PredictionNetwork(latent_dim, action_dim, hidden_layers, activation_func)
         
         self.optimizer = optim.Adam(
             list(self.representation_network.parameters()) +
@@ -105,7 +122,7 @@ class NeuralNetworkManager:
 
 # Example Usage
 if __name__ == "__main__":
-    manager = NeuralNetworkManager(input_dim=10, latent_dim=16, action_dim=4)
+    manager = NeuralNetworkManager(input_dim=10, latent_dim=16, action_dim=4, hidden_layers=[128, 64], activation_func=nn.ReLU)
     dummy_state = torch.randn(1, 10)
     policy, value = manager.predict(dummy_state)
     print("Policy:", policy)
