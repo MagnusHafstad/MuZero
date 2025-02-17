@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 class NeuralNetworkManager:
     """Manages the training and deployment of MuZero’s three neural networks."""
-    def __init__(self, state_dim, abstract_state_dim, action_dim, hidden_layers, activation_func, lr=0.001):
+    def __init__(self, state_dim, abstract_state_dim, action_dim, hidden_layers, activation_func, learning_rate):
         self.representation_network = RepresentationNetwork(state_dim, abstract_state_dim, hidden_layers, activation_func)
         self.dynamics_network = DynamicsNetwork(abstract_state_dim, action_dim, hidden_layers, activation_func)
         self.prediction_network = PredictionNetwork(abstract_state_dim, action_dim, hidden_layers, activation_func)
@@ -14,7 +14,7 @@ class NeuralNetworkManager:
         self.optimizer = optim.Adam(
             list(self.representation_network.parameters()) +
             list(self.dynamics_network.parameters()) +
-            list(self.prediction_network.parameters()), lr=lr)
+            list(self.prediction_network.parameters()), learning_rate = learning_rate)
     
     def train_step(self, batch):
         """Runs one step of training using backpropagation through time (BPTT)."""
