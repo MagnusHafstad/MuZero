@@ -3,6 +3,53 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+
+class NeuralNetworkManager:
+    """Manages the training and deployment of MuZero’s three neural networks."""
+    def __init__(self, state_dim, abstract_state_dim, action_dim, hidden_layers, activation_func, lr=0.001):
+        self.representation_network = RepresentationNetwork(state_dim, abstract_state_dim, hidden_layers, activation_func)
+        self.dynamics_network = DynamicsNetwork(abstract_state_dim, action_dim, hidden_layers, activation_func)
+        self.prediction_network = PredictionNetwork(abstract_state_dim, action_dim, hidden_layers, activation_func)
+        
+        self.optimizer = optim.Adam(
+            list(self.representation_network.parameters()) +
+            list(self.dynamics_network.parameters()) +
+            list(self.prediction_network.parameters()), lr=lr)
+    
+    def train_step(self, batch):
+        """Runs one step of training using backpropagation through time (BPTT)."""
+        states, actions, policies, values, rewards = batch
+        
+        # Forward pass
+        abstract_states = self.representation_network(states)
+        pred_policies, pred_values = self.prediction_network(abstract_states)
+        
+        loss_policy = F.cross_entropy(pred_policies, policies)
+        loss_value = F.mse_loss(pred_values.squeeze(), values)
+        loss_reward = 0
+        
+        # Simulate dynamics
+        for i in range(actions.shape[1]):  # Rollout through time
+            abstract_states, pred_rewards = self.dynamics_network(abstract_states, actions[:, i])
+            loss_reward += F.mse_loss(pred_rewards.squeeze(), rewards[:, i])
+        
+        loss = loss_policy + loss_value + loss_reward
+        
+        # Backpropagation
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        
+        return loss.item()
+    
+    def predict(self, state):
+        """Deploys the trained networks to make predictions from a given game state."""
+        with torch.no_grad():
+            abstract_state = self.representation_network(state)
+            policy, value = self.prediction_network(abstract_state)
+        return policy, value
+
+
 class RepresentationNetwork(nn.Module):
     """Representation Network (NNr) - Maps raw observations to abstract state representations."""
     def __init__(self, state_dim, abstract_state_dim, hidden_layers, activation_func):
@@ -75,50 +122,6 @@ class PredictionNetwork(nn.Module):
         value = self.fc_value(abstract_state)
         return policy, value
 
-class NeuralNetworkManager:
-    """Manages the training and deployment of MuZero’s three neural networks."""
-    def __init__(self, input_dim, abstract_state_dim, action_dim, hidden_layers, activation_func, lr=0.001):
-        self.representation_network = RepresentationNetwork(input_dim, abstract_state_dim, hidden_layers, activation_func)
-        self.dynamics_network = DynamicsNetwork(abstract_state_dim, action_dim, hidden_layers, activation_func)
-        self.prediction_network = PredictionNetwork(abstract_state_dim, action_dim, hidden_layers, activation_func)
-        
-        self.optimizer = optim.Adam(
-            list(self.representation_network.parameters()) +
-            list(self.dynamics_network.parameters()) +
-            list(self.prediction_network.parameters()), lr=lr)
-    
-    def train_step(self, batch):
-        """Runs one step of training using backpropagation through time (BPTT)."""
-        states, actions, policies, values, rewards = batch
-        
-        # Forward pass
-        abstract_states = self.representation_network(states)
-        pred_policies, pred_values = self.prediction_network(abstract_states)
-        
-        loss_policy = F.cross_entropy(pred_policies, policies)
-        loss_value = F.mse_loss(pred_values.squeeze(), values)
-        loss_reward = 0
-        
-        # Simulate dynamics
-        for i in range(actions.shape[1]):  # Rollout through time
-            abstract_states, pred_rewards = self.dynamics_network(abstract_states, actions[:, i])
-            loss_reward += F.mse_loss(pred_rewards.squeeze(), rewards[:, i])
-        
-        loss = loss_policy + loss_value + loss_reward
-        
-        # Backpropagation
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-        
-        return loss.item()
-    
-    def predict(self, state):
-        """Deploys the trained networks to make predictions from a given game state."""
-        with torch.no_grad():
-            abstract_state = self.representation_network(state)
-            policy, value = self.prediction_network(abstract_state)
-        return policy, value
 
 # Example Usage
 if __name__ == "__main__":
