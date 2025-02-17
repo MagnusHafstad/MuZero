@@ -1,0 +1,8 @@
+train_config:
+  number_of_episodes: 100
+  number_of_steps_in_episode: 1000
+  number_of_MTC_simulations: 4
+  max_depth: 10
+  training_interval: 10
+game: snake
+game_size: 5

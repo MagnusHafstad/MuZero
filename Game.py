@@ -1,6 +1,21 @@
 import pygame
 import numpy as np
 import snake_gui
+import yaml
+
+def load_config(file_path: str) -> dict:
+    with open(file_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
+config = load_config('./config.yaml')
+
+
+def get_game():
+    match config.get('game'):
+        case "snake":
+            return Snake(config.get('game_size'))
+    raise ValueError("Invalid game type in config.yaml")
 
 class Snake():
     def __init__(self, size, head=True):
