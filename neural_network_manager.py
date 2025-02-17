@@ -1,61 +1,112 @@
 import torch
 import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
 
 class RepresentationNetwork(nn.Module):
-    def __init__(self, input_size, hidden_size):
-        super(RepresentationNetwork, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.relu = nn.ReLU()
-
+    """Representation Network (NNr) - Maps raw observations to latent state representations."""
+    def __init__(self, input_dim, latent_dim):
+        super().__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(input_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, latent_dim)
+        )
+    
     def forward(self, x):
-        x = self.fc1(x)
-        x = self.relu(x)
-        return x
+        return self.fc(x)
 
 class DynamicsNetwork(nn.Module):
-    def __init__(self, hidden_size, action_size):
-        super(DynamicsNetwork, self).__init__()
-        self.fc1 = nn.Linear(hidden_size + action_size, hidden_size)
-        self.relu = nn.ReLU()
-
-    def forward(self, x, a):
-        x = torch.cat((x, a), dim=1)
-        x = self.fc1(x)
-        x = self.relu(x)
-        return x
+    """Dynamics Network (NNd) - Predicts next state and reward given a latent state and action."""
+    def __init__(self, latent_dim, action_dim):
+        super().__init__()
+        self.fc_state = nn.Sequential(
+            nn.Linear(latent_dim + action_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, latent_dim)
+        )
+        self.fc_reward = nn.Sequential(
+            nn.Linear(latent_dim + action_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 1)
+        )
+    
+    def forward(self, latent_state, action):
+        x = torch.cat([latent_state, action], dim=-1)
+        next_state = self.fc_state(x)
+        reward = self.fc_reward(x)
+        return next_state, reward
 
 class PredictionNetwork(nn.Module):
-    def __init__(self, hidden_size, action_size, value_size):
-        super(PredictionNetwork, self).__init__()
-        self.fc1 = nn.Linear(hidden_size, action_size)
-        self.fc2 = nn.Linear(hidden_size, value_size)
-        self.softmax = nn.Softmax(dim=1)
-
-    def forward(self, x):
-        policy = self.fc1(x)
-
-        policy = self.softmax(policy)
-        value = self.fc2(x)
+    """Prediction Network (NNp) - Outputs policy and value estimates from a latent state."""
+    def __init__(self, latent_dim, action_dim):
+        super().__init__()
+        self.fc_policy = nn.Sequential(
+            nn.Linear(latent_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, action_dim),
+            nn.Softmax(dim=-1)
+        )
+        self.fc_value = nn.Sequential(
+            nn.Linear(latent_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 1)
+        )
+    
+    def forward(self, latent_state):
+        policy = self.fc_policy(latent_state)
+        value = self.fc_value(latent_state)
         return policy, value
 
-# Example usage
-input_size = 10
-hidden_size = 64
-action_size = 4
-value_size = 1
+class NeuralNetworkManager:
+    """Manages the training and deployment of MuZero’s three neural networks."""
+    def __init__(self, input_dim, latent_dim, action_dim, lr=0.001):
+        self.representation_network = RepresentationNetwork(input_dim, latent_dim)
+        self.dynamics_network = DynamicsNetwork(latent_dim, action_dim)
+        self.prediction_network = PredictionNetwork(latent_dim, action_dim)
+        
+        self.optimizer = optim.Adam(
+            list(self.representation_network.parameters()) +
+            list(self.dynamics_network.parameters()) +
+            list(self.prediction_network.parameters()), lr=lr)
+    
+    def train_step(self, batch):
+        """Runs one step of training using backpropagation through time (BPTT)."""
+        states, actions, policies, values, rewards = batch
+        
+        # Forward pass
+        latent_states = self.representation_network(states)
+        pred_policies, pred_values = self.prediction_network(latent_states)
+        
+        loss_policy = F.cross_entropy(pred_policies, policies)
+        loss_value = F.mse_loss(pred_values.squeeze(), values)
+        loss_reward = 0
+        
+        # Simulate dynamics
+        for i in range(actions.shape[1]):  # Rollout through time
+            latent_states, pred_rewards = self.dynamics_network(latent_states, actions[:, i])
+            loss_reward += F.mse_loss(pred_rewards.squeeze(), rewards[:, i])
+        
+        loss = loss_policy + loss_value + loss_reward
+        
+        # Backpropagation
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        
+        return loss.item()
+    
+    def predict(self, state):
+        """Deploys the trained networks to make predictions from a given game state."""
+        with torch.no_grad():
+            latent_state = self.representation_network(state)
+            policy, value = self.prediction_network(latent_state)
+        return policy, value
 
-representation_net = RepresentationNetwork(input_size, hidden_size)
-dynamics_net = DynamicsNetwork(hidden_size, action_size)
-prediction_net = PredictionNetwork(hidden_size, action_size, value_size)
-
-# Generate random input
-input_data = torch.randn(1, input_size)
-
-# Forward pass through the networks
-hidden_state = representation_net(input_data)
-action = torch.randn(1, action_size)
-next_hidden_state = dynamics_net(hidden_state, action)
-policy, value = prediction_net(next_hidden_state)
-
-print("Policy:", policy)
-print("Value:", value)
+# Example Usage
+if __name__ == "__main__":
+    manager = NeuralNetworkManager(input_dim=10, latent_dim=16, action_dim=4)
+    dummy_state = torch.randn(1, 10)
+    policy, value = manager.predict(dummy_state)
+    print("Policy:", policy)
+    print("Value:", value)
