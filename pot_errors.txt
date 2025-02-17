@@ -1,0 +1,6 @@
+1. DOROLL_OUt() call depth. Hvor dypt går man - til leaf eller leaf child i dmax-d.
+
+2. final policy for step. Er normalise riktig? sjekk funksjonen brukt til normalisering.
+
+3. ϕk ={sk−q,...,sk} # Gather q+1 real-game states. Fill with blank states when k < q. Dette kan fort være feil.
+    Hvordan initialiserer man/henter man ut states. Blir det riktig å oppdatere denne nederst i episode loop.
