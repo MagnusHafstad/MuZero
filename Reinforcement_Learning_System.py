@@ -20,7 +20,7 @@ def load_config(file_path: str) -> dict:
         config = yaml.safe_load(file)
     return config
 
-config = load_config('/C:/Users/hafst/MuZero/config.yaml')
+config = load_config('./config.yaml')
 
 class Reinforcement_Learning_System:
     def __init__(self):
