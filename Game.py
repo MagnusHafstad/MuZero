@@ -1,6 +1,21 @@
 import pygame
 import numpy as np
 import snake_gui
+import yaml
+
+def load_config(file_path: str) -> dict:
+    with open(file_path, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
+
+config = load_config('./config.yaml')
+
+
+def get_game():
+    match config.get('game'):
+        case "snake":
+            return Snake(config.get('game_size'))
+    raise ValueError("Invalid game type in config.yaml")
 
 class Snake():
     def __init__(self, size, head=True):
@@ -12,7 +27,7 @@ class Snake():
         self.snake = [(len(self.board)//2, 0)]
         self.board[self.snake[0][0], self.snake[0][1]] = snake
         self.board[(len(self.board)//2,len(self.board)//2)] = food  
-        self.state = "playing"
+        self.status = "playing"
         self.head = head
         if self.head:
             self.gui = snake_gui.SnakeGUI(size)
@@ -43,11 +58,11 @@ class Snake():
         next_location = self.get_next_location()
         
         if next_location[0] > len(self.board)-1 or next_location[1] > len(self.board)-1:
-            self.state = "game_over"
+            self.status = "game_over"
         elif next_location[0] < 0 or next_location[1] < 0:
-            self.state = "game_over"
+            self.status = "game_over"
         elif self.board[next_location[0], next_location[1]] == 1:
-            self.state = "game_over"
+            self.status = "game_over"
 
         
         elif self.board[next_location[0], next_location[1]] == 2:
@@ -60,11 +75,14 @@ class Snake():
             self.snake.append(next_location)
             self.board[next_location[0], next_location[1]] = 1
         elif self.board.all() == 1:
-            self.state = "Win"
+            self.status = "Win"
     
     def get_board(self) -> np.array:
         return self.board
     
+    def get_state(self) -> str:
+        return self.board, self.snake
+
     def get_direction(self) -> str:
         return self.direction
     
@@ -72,7 +90,7 @@ class Snake():
         self.direction = direction
 
     def game_loop(self) -> None:
-        while self.state == "playing":
+        while self.status == "playing":
             if self.head:
                 self.clock.tick(3)
                 self.direction = self.gui.user_input(self.direction)
@@ -82,7 +100,7 @@ class Snake():
                 self.gui.update_gui(self.board)
             print(self.board)
             #Update GUI
-        print(self.state)
+        print(self.status)
 
 
         
