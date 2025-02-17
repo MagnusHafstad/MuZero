@@ -1,4 +1,4 @@
-
+import numpy as np
 
 class Tree_node():
     def __init__(self, state, parent, reward, depth):
@@ -20,17 +20,24 @@ class U_tree():
 
     
     def search_to_leaf(self) -> Tree_node:
+        #TODO: Write test code for this function
         if len(self.root.children) == 0:
             return self.root 
         current_node = self.root
 
         while len(current_node.children) != 0:
-            current_node = current_node.children[0]
-        
+            current_node = self.select_child_node(current_node.children)     
         return current_node
-            
-            
-
+    
+    def select_child_node(children)-> Tree_node:
+        #TODO: Write test code for this function
+        current_UCB = -100
+        for child in current_node.children:
+            UCB = child.reward + 2 * (np.log(current_node.visit_count) / child.visit_count) ** 0.5
+            if UCB > current_UCB:
+                current_UCB = UCB
+                current_node = child
+        return current_node        
 
 
 def depth_first_search(node, target):
