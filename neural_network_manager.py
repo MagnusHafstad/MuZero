@@ -122,7 +122,7 @@ class NeuralNetworkManager:
 
 # Example Usage
 if __name__ == "__main__":
-    manager = NeuralNetworkManager(input_dim=10, latent_dim=16, action_dim=4, hidden_layers=[128, 64], activation_func=nn.ReLU)
+    manager = NeuralNetworkManager(input_dim=10, _dim=16, action_dim=4, hidden_layers=[128, 64], activation_func=nn.ReLU)
     dummy_state = torch.randn(1, 10)
     policy, value = manager.predict(dummy_state)
     print("Policy:", policy)
