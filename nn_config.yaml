@@ -1,0 +1,32 @@
+representation:
+  learning_rate: 0.01
+  load: False 
+  input: 16 #input size
+  output: 16 #output size
+  layers: 
+    - type: relu #relu, sigmoid, softmax, linear, etc.
+      size: 16
+    - type: sigmoid
+      size: 16
+
+dynamic:
+  learning_rate: 0.01
+  load: False
+  input: 16 #same as the output size of the representation + input
+  output: 16
+  layers: 
+    - type: relu #relu, sigmoid, softmax, linear, etc.
+      size: 16
+    - type: sigmoid
+      size: 16
+
+prediction:
+  learning_rate: 0.01
+  load: False
+  input: 16 #make sure this is the same as the input size of the representation
+  output: 1
+  layers: 
+    - type: relu #relu, sigmoid, softmax, linear, etc.
+      size: 16
+    - type: sigmoid
+      size: 16
