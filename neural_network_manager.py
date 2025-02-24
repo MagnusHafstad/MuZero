@@ -14,7 +14,7 @@ class NeuralNetworkManager:
         self.optimizer = optim.Adam(
             list(self.representation_network.parameters()) +
             list(self.dynamics_network.parameters()) +
-            list(self.prediction_network.parameters()), learning_rate = learning_rate)
+            list(self.prediction_network.parameters()), learning_rate)
     
     def train_step(self, batch):
         """Runs one step of training using backpropagation through time (BPTT)."""
@@ -127,7 +127,7 @@ class PredictionNetwork(nn.Module):
 
 # Example Usage
 if __name__ == "__main__":
-    manager = NeuralNetworkManager(input_dim=10, abstract_state_dim=16, action_dim=4, hidden_layers=[128, 64], activation_func=nn.ReLU)
+    manager = NeuralNetworkManager(state_dim=10, abstract_state_dim=16, action_dim=4, hidden_layers=[128, 64], activation_func=nn.ReLU, learning_rate=0.01)
     dummy_state = torch.randn(1, 10)
     policy, value = manager.predict(dummy_state)
     print("Policy:", policy)
