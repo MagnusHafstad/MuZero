@@ -89,7 +89,9 @@ class DynamicsNetwork(nn.Module):
         self.fc_state = nn.Sequential(*layers_state)
         self.fc_reward = nn.Sequential(*layers_reward)
     
-    def forward(self, abstract_state, action):
+    def forward(self, abstract_state, action):       
+        abstract_state = torch.tensor(abstract_state, dtype=torch.float32)
+        action = torch.tensor(action, dtype=torch.float32)
         x = torch.cat([abstract_state, action], dim=-1)
         next_state = self.fc_state(x)
         reward = self.fc_reward(x)
