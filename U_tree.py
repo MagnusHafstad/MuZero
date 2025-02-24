@@ -1,4 +1,6 @@
 import numpy as np
+import random
+import torch
 
 class Tree_node():
     def __init__(self, state, parent, reward, depth):
@@ -15,8 +17,9 @@ class Tree_node():
         
 
 class U_tree():
-    def __init__(self, abstract_state):
+    def __init__(self, abstract_state, d_max):
         self.root = Tree_node(abstract_state, None, 0, 0)
+        self.d_max = d_max
 
     def tree_policy(self, node:Tree_node):
         """
@@ -49,5 +52,32 @@ class U_tree():
         print(" " * (level * 4) + f"State: {node.state}, Reward: {node.reward}, Visits: {node.visit_count}")
         for child in node.children:
             self.print_tree(child, level + 1)      
+
+    def MCTS(self, actions, NNd, NNs, NNp):
+        """
+        Do one full MC run through the tree
+        """
+        leaf_node = self.search_to_leaf()
+        
+        for i,action in enumerate(actions):
+            new_state, reward = NNd(leaf_node.state, [action])
+            new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
+            reward = int(reward.item())
+            
+            leaf_node.add_child(new_state,leaf_node,reward)
+        child = random.choice(leaf_node.children)
+        self.print_tree(child)
+        #accum_reward = self.do_rollout(child, self.d_max - child.depth, NNd, NNs)  #ikke klar !!
+        
+        #self.do_backpropagation(child, self.root, accum_reward) # ikke klar!
+
+    
+    def do_rollout(self, NNp):
+        accum_reward = []
+        return accum_reward
+
+    def do_backpropagation(self):
+        pass
+
 
 
