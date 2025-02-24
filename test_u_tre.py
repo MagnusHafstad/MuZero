@@ -22,11 +22,10 @@ NNp = neural_network_manager.PredictionNetwork(abstract_state_dim, action_dim, h
 def testTree():
     #Generate tree:
     action_list = [1,2,3,4]
-    tree = U_tree([1,2,1,1,1], 3, action_list)
+    tree = U_tree([1,2,1,1,1], 10, action_list)
    
-
-    tree.MCTS(action_list, NNd, NNs, NNp)
-
+    for i in range(5):
+        tree.MCTS(action_list, NNd, NNs, NNp)
     tree.print_tree(tree.root)
 
 testTree()

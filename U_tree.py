@@ -68,37 +68,49 @@ class U_tree():
             leaf_node.add_child(new_state,leaf_node,reward)
 
         child = random.choice(leaf_node.children)
-        self.print_tree(child)
-        accum_reward = self.do_rollout(child, self.d_max - child.depth, NNd, NNs)#ikke klar !!
-        print(accum_reward)  
-        
-        #self.do_backpropagation(child, self.root, accum_reward) # ikke klar!
+        accum_reward = self.do_rollout(child, self.d_max - child.depth, NNp, NNd, NNs)#ikke klar !!
+        print(accum_reward)
+        self.do_backpropagation(child, self.root, accum_reward) # ikke klar!
 
     
-    def do_rollout(self, node:Tree_node, depth, NNp, NNd) -> list:
+    def do_rollout(self, node:Tree_node, depth, NNp, NNd, NNs) -> list:
         """
         do further simulation untill desired depth of tree
         NOT DONE!!!
         """
         accum_reward = []
-        for d in range(node.depth):
-            state_policy, state_value = NNp(node.state)
-            print("heihiehie")
+        print(depth)
+        for d in range(depth):
+            state_policy, state_value = NNp(torch.tensor(node.state))
             action = self.get_action(state_policy) #not implemented!
             new_state, reward = NNd(node.state, [action])
+
             new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
             reward = int(reward.item())
             accum_reward.append(reward)
 
-        state_policy, state_value = NNp(node.state)
+        state_policy, state_value = NNp(torch.tensor(node.state))
+
+        state_value = state_value.item()
         accum_reward.append(state_value)
+        print(accum_reward)
         return accum_reward
 
-    def do_backpropagation(self):
+    def do_backpropagation(self, node, goal_node, accum_rewards):
+        """
+        updates the reward value of the nodes
+        """
+        node.visit_count += 1
+        node.reward = np.sum(accum_rewards)
+        if node != goal_node:
+            self.do_backpropagation(node.parent,goal_node, accum_rewards) # DOES NOT WORK PROPERLY. SHOULD BE ACCUM_REWARDS.APPEND(NODE.REWARD)
+
+
         pass
 
     def get_action(self, policy): #!!!!!!! NOT IMPLEMENTED!!!!!!!!!
         return random.choice(self.actions)
+
 
 
 
