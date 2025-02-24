@@ -4,7 +4,7 @@ import torch
 state_dim = 20
 abstract_state_dim = 5
 hidden_layers = [20, 20, 20]
-activation_func = torch.nn.ReLU()
+activation_func = torch.nn.ReLU
 action_dim = 1
 
 
