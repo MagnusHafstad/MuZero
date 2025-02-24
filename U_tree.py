@@ -17,9 +17,10 @@ class Tree_node():
         
 
 class U_tree():
-    def __init__(self, abstract_state, d_max):
+    def __init__(self, abstract_state, d_max, actions):
         self.root = Tree_node(abstract_state, None, 0, 0)
         self.d_max = d_max
+        self.actions = actions
 
     def tree_policy(self, node:Tree_node):
         """
@@ -59,25 +60,45 @@ class U_tree():
         """
         leaf_node = self.search_to_leaf()
         
-        for i,action in enumerate(actions):
+        for i,action in enumerate(self.actions):
             new_state, reward = NNd(leaf_node.state, [action])
             new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
             reward = int(reward.item())
             
             leaf_node.add_child(new_state,leaf_node,reward)
+
         child = random.choice(leaf_node.children)
         self.print_tree(child)
-        #accum_reward = self.do_rollout(child, self.d_max - child.depth, NNd, NNs)  #ikke klar !!
+        accum_reward = self.do_rollout(child, self.d_max - child.depth, NNd, NNs)#ikke klar !!
+        print(accum_reward)  
         
         #self.do_backpropagation(child, self.root, accum_reward) # ikke klar!
 
     
-    def do_rollout(self, NNp):
+    def do_rollout(self, node:Tree_node, depth, NNp, NNd) -> list:
+        """
+        do further simulation untill desired depth of tree
+        NOT DONE!!!
+        """
         accum_reward = []
+        for d in range(node.depth):
+            state_policy, state_value = NNp(node.state)
+            print("heihiehie")
+            action = self.get_action(state_policy) #not implemented!
+            new_state, reward = NNd(node.state, [action])
+            new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
+            reward = int(reward.item())
+            accum_reward.append(reward)
+
+        state_policy, state_value = NNp(node.state)
+        accum_reward.append(state_value)
         return accum_reward
 
     def do_backpropagation(self):
         pass
+
+    def get_action(self, policy): #!!!!!!! NOT IMPLEMENTED!!!!!!!!!
+        return random.choice(self.actions)
 
 
 

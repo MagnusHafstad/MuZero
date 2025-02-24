@@ -18,10 +18,12 @@ NNd= neural_network_manager.DynamicsNetwork(abstract_state_dim, action_dim, hidd
 NNp = neural_network_manager.PredictionNetwork(abstract_state_dim, action_dim, hidden_layers, activation_func)
 
 
+
 def testTree():
     #Generate tree:
-    tree = U_tree([1,2,1,1,1], 3)
     action_list = [1,2,3,4]
+    tree = U_tree([1,2,1,1,1], 3, action_list)
+   
 
     tree.MCTS(action_list, NNd, NNs, NNp)
 
