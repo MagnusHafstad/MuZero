@@ -1,17 +1,21 @@
 from U_tree import U_tree
 
-tree = U_tree(4)
-print("hei")
-for i in range(3):
-    print("ho")
-    tree.root.add_child(2,tree.root,2)
+def testTree():
+    #Generate tree:
+    tree = U_tree(1)
+    for i in range(5):
+        tree.root.add_child(i,tree.root,i)
 
-tempchild = tree.root.children
+    for child in tree.root.children:
+        for i in range(3):
+            child.add_child(i,child,i)
 
-for node in tempchild:
-    node.add_child(3,node,3)
+    tree.print_tree(tree.root, 1)
 
-    print(node)
-print("ferdig init")
+    #test search
+    node = tree.search_to_leaf()
+    print(f"State: {node.state}, Reward: {node.reward}, Visits: {node.visit_count}")
+    print(node.parent.state)
 
-print(tree.search_to_leaf().state)
+
+testTree()

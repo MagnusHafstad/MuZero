@@ -5,7 +5,7 @@ class Tree_node():
         self.state = state
         self.children = []
         self.parent = parent
-        self.visit_count = 0
+        self.visit_count = 1
         self.reward = reward
         self.depth = depth
 
@@ -18,54 +18,36 @@ class U_tree():
     def __init__(self, abstract_state):
         self.root = Tree_node(abstract_state, None, 0, 0)
 
+    def tree_policy(self, node:Tree_node):
+        """
+        Use upper confidence bounds(UCB) as tree policy
+        """
+        c = 1
+        return node.reward + c* np.sqrt(np.log(node.parent.visit_count)/node.visit_count)
+
     
     def search_to_leaf(self) -> Tree_node:
-        #TODO: Write test code for this function
         if len(self.root.children) == 0:
             return self.root 
         current_node = self.root
 
         while len(current_node.children) != 0:
-            current_node = self.select_child_node(current_node.children)     
+            current_node = self.select_child_node(current_node)     
         return current_node
     
-    def select_child_node(children)-> Tree_node:
-        #TODO: Write test code for this function
+    def select_child_node(self, node)-> Tree_node:
         current_UCB = -100
-        for child in current_node.children:
-            UCB = child.reward + 2 * (np.log(current_node.visit_count) / child.visit_count) ** 0.5
+        for child in node.children:
+            UCB = self.tree_policy(child)
             if UCB > current_UCB:
                 current_UCB = UCB
-                current_node = child
-        return current_node        
+                node = child
+        return node
 
-
-def depth_first_search(node, target):
-    if node is None:
-        return False
-    if node.depth == target:
-        return True
-    for child in node.children:
-        if depth_first_search(child, target):
-            return True
-    return False
-
-
-tree = U_tree(4)
-print("hei")
-for i in range(3):
-    print("ho")
-    tree.root.add_child(2,tree.root,2)
-
-tempchild = tree.root.children
-
-for node in tempchild:
-    node.add_child(3,node,3)
-
-    print(node)
-print("ferdig init")
-
-print(tree.search_to_leaf().state)
-
+### only for debug
+    def print_tree(self, node, level=0):
+        print(" " * (level * 4) + f"State: {node.state}, Reward: {node.reward}, Visits: {node.visit_count}")
+        for child in node.children:
+            self.print_tree(child, level + 1)      
 
 
