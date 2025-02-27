@@ -1,32 +1,38 @@
+learning_rate: 0.01
+state_dim: 16
+abstract_state_dim: 14
+action_dim: 2
+reward_dim: 1
+policy_dim: 4
+
+
 representation:
   learning_rate: 0.01
   load: False 
-  input: 16 #input size
-  output: 16 #output size
+  output_layer: linear
   layers: 
     - type: relu #relu, sigmoid, softmax, linear, etc.
-      size: 16
+      dim: 16
     - type: sigmoid
-      size: 16
-
-dynamic:
+      dim: 16
+ 
+dynamics:
   learning_rate: 0.01
   load: False
-  input: 16 #same as the output size of the representation + input
-  output: 16
+  output_layer: linear
   layers: 
     - type: relu #relu, sigmoid, softmax, linear, etc.
-      size: 16
+      dim: 16
     - type: sigmoid
-      size: 16
+      dim: 16
 
 prediction:
   learning_rate: 0.01
   load: False
-  input: 16 #make sure this is the same as the input size of the representation
-  output: 1
+  policy_output_layer: softmax
+  reward_output_layer: linear
   layers: 
     - type: relu #relu, sigmoid, softmax, linear, etc.
-      size: 16
+      dim: 16
     - type: sigmoid
-      size: 16
+      dim: 16
