@@ -1,6 +1,7 @@
 from U_tree import U_tree
 import torch
 import torch.nn as nn
+import numpy as np
 
 
 import neural_network_manager
@@ -24,9 +25,17 @@ def testTree():
     action_list = [1,2,3,4]
     tree = U_tree([1,2,1,1,1], 10, action_list)
    
-    for i in range(3):
+    for i in range(20):
         tree.MCTS(action_list, NNd, NNs, NNp)
 
     tree.print_tree(tree.root)
 
 testTree()
+
+policy = [0.7,0.1,0.1,0.1]
+action_list = [1,2,3,4]
+tree = U_tree([1,2,1,1,1], 10, action_list)
+
+for i in range(10):
+    print(tree.get_action(policy))
+

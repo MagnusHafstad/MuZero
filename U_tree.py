@@ -68,8 +68,8 @@ class U_tree():
             leaf_node.add_child(new_state,leaf_node,reward)
 
         child = random.choice(leaf_node.children)
-        accum_reward = self.do_rollout(child, self.d_max - child.depth, NNp, NNd, NNs)#ikke klar !!
-        self.do_backpropagation(child, self.root, accum_reward) # ikke klar!
+        accum_reward = self.do_rollout(child, self.d_max - child.depth, NNp, NNd, NNs)
+        self.do_backpropagation(child, self.root, accum_reward) 
 
     
     def do_rollout(self, node:Tree_node, depth, NNp, NNd, NNs) -> list[float]:
@@ -81,7 +81,7 @@ class U_tree():
         state = node.state
         for _ in range(depth):
             state_policy, state_value = NNp(torch.tensor(state))
-            action = self.get_action(state_policy) #not implemented!
+            action = self.get_action(state_policy) 
             state, reward = NNd(state, [action])
 
             state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
@@ -94,7 +94,7 @@ class U_tree():
         accum_reward.append(state_value)
         return accum_reward
 
-    def do_backpropagation(self, node, goal_node, accum_rewards: list): #the s in accum_rewards is suspisious
+    def do_backpropagation(self, node, goal_node, accum_rewards: list):
         """
         updates the reward value of the nodes
         """
@@ -102,13 +102,17 @@ class U_tree():
         node.reward = sum(accum_rewards)
         accum_rewards.append(node.reward)
         if node != goal_node:
-            self.do_backpropagation(node.parent,goal_node, accum_rewards) # DOES NOT WORK PROPERLY. SHOULD BE ACCUM_REWARDS.APPEND(NODE.REWARD)
+            self.do_backpropagation(node.parent,goal_node, accum_rewards) 
 
 
         pass
 
-    def get_action(self, policy): #!!!!!!! NOT IMPLEMENTED!!!!!!!!!
-        return random.choice(self.actions)
+    def get_action(self, policy): 
+        """
+        Policy should be a normalized 1-d vector
+        """
+        action = np.random.choice(self.actions, p=policy)
+        return action
 
 
 
