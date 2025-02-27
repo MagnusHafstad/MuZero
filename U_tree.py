@@ -69,9 +69,6 @@ class U_tree():
 
         child = random.choice(leaf_node.children)
         accum_reward = self.do_rollout(child, self.d_max - child.depth, NNp, NNd, NNs)#ikke klar !!
-        print(accum_reward)
-        if accum_reward == None:
-            print("hello")
         self.do_backpropagation(child, self.root, accum_reward) # ikke klar!
 
     
@@ -95,8 +92,6 @@ class U_tree():
 
         state_value = state_value.item()
         accum_reward.append(state_value)
-        if accum_reward == None:
-            print("hello")
         return accum_reward
 
     def do_backpropagation(self, node, goal_node, accum_rewards: list): #the s in accum_rewards is suspisious
