@@ -103,7 +103,7 @@ class U_tree():
         node.visit_count += 1
         node.reward = np.sum(accum_rewards)
         if node != goal_node:
-            self.do_backpropagation(node.parent,goal_node, accum_rewards) # DOES NOT WORK PROPERLY. SHOULD BE ACCUM_REWARDS.APPEND(NODE.REWARD)
+            self.do_backpropagation(node.parent,goal_node, accum_rewards.append(node.reward)) # DOES NOT WORK PROPERLY. SHOULD BE ACCUM_REWARDS.APPEND(NODE.REWARD)
 
 
         pass

@@ -24,8 +24,9 @@ def testTree():
     action_list = [1,2,3,4]
     tree = U_tree([1,2,1,1,1], 10, action_list)
    
-    for i in range(5):
+    for i in range(3):
         tree.MCTS(action_list, NNd, NNs, NNp)
+
     tree.print_tree(tree.root)
 
 testTree()
