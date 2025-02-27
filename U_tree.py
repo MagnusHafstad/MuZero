@@ -70,6 +70,8 @@ class U_tree():
         child = random.choice(leaf_node.children)
         accum_reward = self.do_rollout(child, self.d_max - child.depth, NNp, NNd, NNs)#ikke klar !!
         print(accum_reward)
+        if accum_reward == None:
+            print("hello")
         self.do_backpropagation(child, self.root, accum_reward) # ikke klar!
 
     
@@ -103,8 +105,9 @@ class U_tree():
         """
         node.visit_count += 1
         node.reward = sum(accum_rewards)
+        accum_rewards.append(node.reward)
         if node != goal_node:
-            self.do_backpropagation(node.parent,goal_node, accum_rewards.append(node.reward)) # DOES NOT WORK PROPERLY. SHOULD BE ACCUM_REWARDS.APPEND(NODE.REWARD)
+            self.do_backpropagation(node.parent,goal_node, accum_rewards) # DOES NOT WORK PROPERLY. SHOULD BE ACCUM_REWARDS.APPEND(NODE.REWARD)
 
 
         pass
