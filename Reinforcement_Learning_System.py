@@ -1,6 +1,7 @@
 import yaml
 
 import Game
+from Game import simulate_game_step, get_game_state
 import U_tree
 import numpy as np
 
@@ -62,28 +63,22 @@ class Reinforcement_Learning_System:
         NNr = ANN()
         NNd = ANN()
         NNp = ANN()
-
+        actions = config.get('set_of_actions')
         for episode_nr in range(config.get('number_of_episodes')):
             game = Game()
             episode_data = []
-            real_game_states = game.get_game_state()
+            
+            real_game_states = game.get_game_state() #TODO: Fix this, it is probably wrong
             for k in range(config.get('number_of_steps_in_episode')):
                 
                 abstract_state = NNr.forward(real_game_states)
                 u_tree = U_tree(abstract_state)
                 for m in range(config.get('number_of_MTC_simulations')):
-                    leaf_node = u_tree.search_to_leaf()
-                    for action in (config.get('set_of_actions')):
-                        next_abstract_state, next_reward = NNd.forward(leaf_node, action)
-                        leaf_node.add_child(next_abstract_state, next_reward)
-                    
-                    random_child = leaf_node.get_random_child()
-                    accumulated_reward = do_rollout(random_child, config.get(['train_config']['max_depth']) - u_tree.get_depth(random_child), NNd, NNp)
-                    do_backpropagation(random_child, abstract_state, accumulated_reward)
+                    u_tree.MCTS(actions, NNd, NNr, NNp)
                 final_policy_for_step = normalize_visits(leaf_node.get_visits()) #higly suspect
                 root_value = u_tree.get_root_value()
                 next_action = self.select_state(final_policy_for_step)
-                next_state, next_reward = simulate_game_step(real_game_states[-1], next_action)
+                next_state, next_reward = game.simulate_game_step(real_game_states[-1], next_action)
                 real_game_states[k]= next_state
                 episode_data.append([real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward])
             self.episode_history.append(episode_data)
