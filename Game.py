@@ -106,7 +106,7 @@ class Snake():
             #Update GUI
         print(self.status)
 
-    def get_game_state(self):
+    def get_real_nn_game_state(self):
         nn_board = np.copy(self.board)
         nn_board[nn_board == 2] = -1
         nn_board[nn_board == 1] = 0
@@ -115,18 +115,29 @@ class Snake():
             nn_board[self.snake[segment][0], self.snake[segment][1]] = segment + 1
         return nn_board
     
+    def nn_state_to_game_state(self, nn_game_state):
+        snake = []
+        for i in range(1, len(nn_game_state)):
+            snake.append(np.argwhere(nn_game_state == i))
+        nn_game_state[nn_game_state > 0] = 1
+        nn_game_state[nn_game_state == -1] = 2
+        print(snake)
+        print(nn_game_state)
+        self.snake = [(pos[0][0], pos[0][1]) for pos in snake]
+        self.board = nn_game_state
+
     def simulate_game_step(self, real_game_state, direction: str):
         """Simulates one gamestep and returns the next state and reward
            
            In the general case, the direction is the action taken by the agent"""
-        self.board = real_game_state[0]
-        self.snake = real_game_state[1]
+        self.nn_state_to_game_state(real_game_state)
         self.direction = direction
         self.get_next_location()
         self.set_next_state()
         print(self.board)
-        return self.get_game_state()
-        
+        return self.get_real_nn_game_state()
 
-        
+
+
+
 

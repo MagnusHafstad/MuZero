@@ -69,7 +69,7 @@ class Reinforcement_Learning_System:
             game = Snake(config.get('game_size'))
             episode_data = []
             
-            real_game_states = game.get_game_state() #TODO: Fix this, it is probably wrong
+            real_game_states = game.get_real_nn_game_state() #TODO: Fix this, it is probably wrong
             for k in range(config["train_config"]['number_of_steps_in_episode']):
                 
                 abstract_state = NNr.forward(real_game_states)
