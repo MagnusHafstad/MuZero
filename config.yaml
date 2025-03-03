@@ -1,10 +1,10 @@
 train_config:
-  number_of_episodes: 10
+  number_of_episodes: 20
   number_of_steps_in_episode: 100
   number_of_MTC_simulations: 4
   max_depth: 10
   training_interval: 10
 game: snake
-game_size: 5
+game_size: 8
 set_of_actions: [0, 1, 2, 3] # Right, left, up, down
 head: True
