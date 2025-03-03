@@ -79,6 +79,10 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
     lossD.backward(retain_graph=True)
     lossP.backward()
 
+    nn.utils.clip_grad_norm_(NNr.parameters(), 3)
+    nn.utils.clip_grad_norm_(NNd.parameters(), 3)
+    nn.utils.clip_grad_norm_(NNp.parameters(), 3) 
+
     optimizerR.step()
     optimizerD.step()
     optimizerP.step()
