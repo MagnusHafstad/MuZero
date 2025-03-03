@@ -6,4 +6,4 @@ train_config:
   training_interval: 10
 game: snake
 game_size: 5
-set_of_actions: ["up", "down", "left", "right"]
+set_of_actions: [0, 1, 2, 3] # Right, left, up, down
