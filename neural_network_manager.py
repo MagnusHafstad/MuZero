@@ -50,9 +50,9 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
         i = random.randint(0, len(state)-1)
         state = state[i]
         actions = actions[i]
-        policies = policies[i]
-        values = values[i]
-        rewards = rewards[i]
+        policies = torch.tensor(policies[i], dtype=torch.float32)
+        values = torch.tensor(values[i], dtype=torch.float32)
+        rewards = torch.tensor(rewards[i], dtype=torch.float32)
     
     abstract_state = NNr(state)
     next_abstract_state, predicted_reward = NNd(abstract_state, actions)
@@ -75,8 +75,8 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
     lossD = loss_fn(predicted_reward, rewards)
     lossP = loss_fn(predicted_policies, policies)
 
-    lossR.backward()
-    lossD.backward()
+    lossR.backward(retain_graph=True)
+    lossD.backward(retain_graph=True)
     lossP.backward()
 
     optimizerR.step()
