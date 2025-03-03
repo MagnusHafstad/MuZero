@@ -102,16 +102,17 @@ class Snake():
 
     def get_game_state(self):
         return (self.board, self.snake)
+    
     def simulate_game_step(self, real_game_state, direction: str):
         """Simulates one gamestep and returns the next state and reward
            
            In the general case, the direction is the action taken by the agent"""
+        self.board = real_game_state[0]
+        self.snake = real_game_state[1]
         self.direction = direction
         self.get_next_location()
         self.set_next_state()
         print(self.board)
-        next_state = (self.board, self.snake)
-        next_reward = len(self.snake)
         return self.get_game_state()
         
 

@@ -1,8 +1,7 @@
 import yaml
 
-import Game
-from Game import simulate_game_step, get_game_state
-import U_tree
+from Game import Snake
+from U_tree import U_tree
 import numpy as np
 from neural_network_manager import *
 
@@ -36,7 +35,7 @@ class Reinforcement_Learning_System:
         """
         game_states = []    
         for episode in range(len(self.episode_history)):
-            game = Game()
+            game = Snake()
             # TODO: Run through the game and save the game states
             game_states.append((game.board, game.snake))
         return game_states
@@ -66,27 +65,28 @@ class Reinforcement_Learning_System:
         NNd = DynamicsNetwork()
         NNp = PredictionNetwork()
         actions = config.get('set_of_actions')
-        for episode_nr in range(config.get('number_of_episodes')):
-            game = Game()
+        for episode_nr in range(config["train_config"]['number_of_episodes']):
+            game = Snake(config.get('game_size'))
             episode_data = []
             
             real_game_states = game.get_game_state() #TODO: Fix this, it is probably wrong
-            for k in range(config.get('number_of_steps_in_episode')):
+            for k in range(config["train_config"]['number_of_steps_in_episode']):
                 
                 abstract_state = NNr.forward(real_game_states)
                 u_tree = U_tree(abstract_state)
-                for m in range(config.get('number_of_MTC_simulations')):
+                for m in range(config["train_config"]['number_of_MTC_simulations']):
                     u_tree.MCTS(actions, NNd, NNr, NNp)
                 final_policy_for_step = u_tree.normalize_visits() #higly suspect
                 root_value = u_tree.get_root_value()
-                next_action = self.select_state(final_policy_for_step)
+                next_action = u_tree.get_action(final_policy_for_step)
                 next_state, next_reward = game.simulate_game_step(real_game_states[-1], next_action)
                 real_game_states[k]= next_state
                 episode_data.append([real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward])
             self.episode_history.append(episode_data)
-            if len(episode_data) % config.get(['train_config']['training_interval']) == 0:
-                do_bptt()
+            # if len(episode_data) % config(['train_config']['training_interval']) == 0:
+            #     do_bptt()
         
         return NNr, NNd, NNp
     
-    
+system = Reinforcement_Learning_System()
+system.episode_loop()

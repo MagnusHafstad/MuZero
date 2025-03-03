@@ -22,6 +22,9 @@ class U_tree():
         self.d_max = d_max
         self.actions = actions
 
+    def get_root_value(self):
+        return self.root.reward
+    
     def tree_policy(self, node:Tree_node):
         """
         Use upper confidence bounds(UCB) as tree policy
