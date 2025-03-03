@@ -82,6 +82,8 @@ class Reinforcement_Learning_System:
                 next_state, next_reward = game.simulate_game_step(real_game_states[k], next_action)
                 real_game_states[k+1]= next_state
                 episode_data.append([real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward])
+                if game.status == "game_over":
+                    break
             self.episode_history.append(episode_data)
             # if len(episode_data) % config(['train_config']['training_interval']) == 0:
             #     do_bptt() 

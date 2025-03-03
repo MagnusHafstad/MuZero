@@ -22,6 +22,7 @@ class SnakeGUI:
                 for col in range(self.matrix_size):
                     color = self.color_map[matrix[row][col]]
                     pygame.draw.rect(self.window_surface, color, (col * self.cell_size, row * self.cell_size, self.cell_size, self.cell_size))
+        pygame.time.wait(100)
         pygame.display.flip()
 
     def user_input(self, prev_direction):
