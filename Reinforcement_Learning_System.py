@@ -74,7 +74,7 @@ class Reinforcement_Learning_System:
                 if game.status == "game_over":
                     break
             self.episode_history.append(episode_data)
-            if len(episode_data) % config(['train_config']['training_interval']) == 0:
+            if len(episode_data) % config['train_config']['batch_size'] == 0:
                 do_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) 
         
         return NNr, NNd, NNp

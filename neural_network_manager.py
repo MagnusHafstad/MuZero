@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import yaml
+import numpy as np
+import random
 
 with open('nn_config.yaml', 'r') as file:
     nn_config = yaml.safe_load(file)
@@ -25,6 +27,70 @@ def pick_activation_func(name):
     else:
         raise ValueError("Invalid activation function name.")
 
+def loss_function(true: list, pred: list):
+    """Calculates the loss between true and predicted values."""
+    loss = 0
+    for t, p in zip(true, pred):
+        loss += F.mse_loss(t, p)
+    return loss
+
+def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
+    unkown_magic = 5
+    q = unkown_magic
+    p = unkown_magic
+
+    for m in range(batch_size):
+        episode = random.choice(episode_history)
+        state = []
+        actions = []
+        policies = []
+        values = []
+        rewards = []
+        
+        for ep in episode:
+            state.append(ep[0])
+            values.append(ep[1])
+            policies.append(ep[2])
+            actions.append(ep[3])
+            rewards.append(ep[4])
+        i = random.randint(0, len(state))
+        state = state[i]
+        actions = actions[i]
+        policies = policies[i]
+        values = values[i]
+        rewards = rewards[i]
+    
+    abstract_state = NNr(state)
+    next_abstract_state, predicted_reward = NNd(abstract_state, actions)
+    predicted_policies, predicted_values = NNp(next_abstract_state)
+
+    predictions = [predicted_policies, predicted_values, predicted_reward]
+    true = [policies, values, rewards]
+    loss = loss_function(true, predictions)
+
+    #Can add momentum
+    optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.01)
+    optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.01)
+    optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.01) 
+    
+    optimizerR.zero_grad()
+    optimizerD.zero_grad()
+    optimizerP.zero_grad()
+
+    loss_fn = nn.MSELoss()
+    lossR = loss_fn(predicted_values, values)
+    lossD = loss_fn(predicted_reward, rewards)
+    lossP = loss_fn(predicted_policies, policies)
+
+    lossR.backward()
+    lossD.backward()
+    lossP.backward()
+
+    optimizerR.step()
+    optimizerD.step()
+    optimizerP.step()
+
+    return NNr, NNd, NNp
 
 class RepresentationNetwork(nn.Module):
     """Representation Network (NNr) - Maps raw observations to abstract state representations."""
