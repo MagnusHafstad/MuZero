@@ -138,9 +138,9 @@ class Snake():
         if config.get('head'):
             self.gui.update_gui(self.board)
         if self.status == "game_over":
-            return self.get_real_nn_game_state(), -10
+            return self.get_real_nn_game_state(), -10 + len(self.snake)
         elif self.status == "Win":
-            return self.get_real_nn_game_state(), 10
+            return self.get_real_nn_game_state(), 10 + len(self.snake)
         
         return self.get_real_nn_game_state(), len(self.snake)
 

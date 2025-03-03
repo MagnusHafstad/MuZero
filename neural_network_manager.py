@@ -62,9 +62,9 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
     true = [policies, values, rewards]
 
     #Can add momentum
-    optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.01)
-    optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.01)
-    optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.01) 
+    optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
+    optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
+    optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.05) 
     
     optimizerR.zero_grad()
     optimizerD.zero_grad()
