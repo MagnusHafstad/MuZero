@@ -4,6 +4,8 @@ import Game
 from Game import simulate_game_step, get_game_state
 import U_tree
 import numpy as np
+from neural_network_manager import *
+
 
 class ANN:
     # This is a placeholder class for the Artificial Neural Network for the typehinting. 
@@ -60,9 +62,9 @@ class Reinforcement_Learning_System:
         """
 
         # init ANN objects
-        NNr = ANN()
-        NNd = ANN()
-        NNp = ANN()
+        NNr = RepresentationNetwork()
+        NNd = DynamicsNetwork()
+        NNp = PredictionNetwork()
         actions = config.get('set_of_actions')
         for episode_nr in range(config.get('number_of_episodes')):
             game = Game()
