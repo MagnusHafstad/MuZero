@@ -104,6 +104,7 @@ class Snake():
         nn_board = np.copy(self.board)
         nn_board[nn_board == 2] = -1
         nn_board[nn_board == 1] = 0
+        # TODO: Check if it is easier for the network if you reverse the snake list so the head is always at index 0
         for segment in range(len(self.snake)):
             nn_board[self.snake[segment][0], self.snake[segment][1]] = segment + 1
         return nn_board
