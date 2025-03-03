@@ -33,8 +33,6 @@ class Snake():
             self.gui = snake_gui.SnakeGUI(size)
             self.clock = pygame.time.Clock()
 
-
-        
     
     def place_food(self) -> None:
         empty_cells = np.argwhere(self.board == 0)
@@ -102,11 +100,19 @@ class Snake():
             #Update GUI
         print(self.status)
 
-    def simulate_game_step(self, direction: str):
+    def get_game_state(self):
+        return (self.board, self.snake)
+    def simulate_game_step(self, real_game_state, direction: str):
+        """Simulates one gamestep and returns the next state and reward
+           
+           In the general case, the direction is the action taken by the agent"""
         self.direction = direction
         self.get_next_location()
         self.set_next_state()
         print(self.board)
+        next_state = (self.board, self.snake)
+        next_reward = len(self.snake)
+        return self.get_game_state()
         
 
         
