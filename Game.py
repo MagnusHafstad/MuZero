@@ -106,7 +106,7 @@ class Snake():
             #Update GUI
         print(self.status)
 
-    def get_game_state(self):
+    def get_real_nn_game_state(self):
         nn_board = np.copy(self.board)
         nn_board[nn_board == 2] = -1
         nn_board[nn_board == 1] = 0
@@ -135,7 +135,7 @@ class Snake():
         self.get_next_location()
         self.set_next_state()
         print(self.board)
-        return self.get_game_state()
+        return self.get_real_nn_game_state()
 
 
 
