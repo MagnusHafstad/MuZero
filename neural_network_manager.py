@@ -27,12 +27,6 @@ def pick_activation_func(name):
     else:
         raise ValueError("Invalid activation function name.")
 
-def loss_function(true: list, pred: list):
-    """Calculates the loss between true and predicted values."""
-    loss = 0
-    for t, p in zip(true, pred):
-        loss += F.mse_loss(t, p)
-    return loss
 
 def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
     unkown_magic = 5
@@ -53,7 +47,7 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
             policies.append(ep[2])
             actions.append(ep[3])
             rewards.append(ep[4])
-        i = random.randint(0, len(state))
+        i = random.randint(0, len(state)-1)
         state = state[i]
         actions = actions[i]
         policies = policies[i]
@@ -66,7 +60,6 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
 
     predictions = [predicted_policies, predicted_values, predicted_reward]
     true = [policies, values, rewards]
-    loss = loss_function(true, predictions)
 
     #Can add momentum
     optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.01)
