@@ -80,7 +80,45 @@ class Snake():
             self.board[next_location[0], next_location[1]] = 1
         elif self.board.all() == 1:
             self.status = "Win"
+
+    def calculate_reward(self, status, len_snake) -> int:
+        if status == "game_over":
+            return -10 + len_snake
+        elif status == "Win":
+            return 10 + len_snake
+        return len_snake
     
+    def get_next_state_and_reward(self):
+        board, snake = self.nn_state_to_game_state()
+        next_location = self.get_next_location()
+        status = self.status
+        
+        if next_location[0] > len(self.board)-1 or next_location[1] > len(self.board)-1:
+            status = "game_over"
+        elif next_location[0] < 0 or next_location[1] < 0:
+            status = "game_over"
+        elif self.board[next_location[0], next_location[1]] == 1:
+            status = "game_over"
+
+        
+        elif self.board[next_location[0], next_location[1]] == 2:
+            snake.append(next_location)
+            board[next_location[0], next_location[1]] = 1
+            board.place_food()
+        elif self.board[next_location[0], next_location[1]] == 0:
+            board[self.snake[0][0],self.snake[0][1]] = 0
+            snake = self.snake[1:] 
+            snake.append(next_location)
+            board[next_location[0], next_location[1]] = 1
+        elif self.board.all() == 1:
+            status = "Win"
+        
+        if config.get('head'):
+            self.gui.update_gui(self.board)
+        
+        
+        return self.get_real_nn_game_state(), self.calculate_reward(status, len(snake))
+
     def get_board(self) -> np.array:
         return self.board
     
@@ -123,26 +161,25 @@ class Snake():
         nn_game_state[nn_game_state > 0] = 1
         nn_game_state[nn_game_state == -1] = 2
 
-        self.snake = [(pos[0][0], pos[0][1]) for pos in snake]
-        self.board = nn_game_state
+        snake = [(pos[0][0], pos[0][1]) for pos in snake]
+        board = nn_game_state
+        return board, snake
 
     def simulate_game_step(self, real_game_state, direction: str):
         """Simulates one gamestep and returns the next state and reward
            
            In the general case, the direction is the action taken by the agent"""
-        self.nn_state_to_game_state(real_game_state)
+        self.board, self.snake = self.nn_state_to_game_state(real_game_state)
         self.direction = direction
         self.get_next_location()
         self.set_next_state()
         print(self.board)
         if config.get('head'):
             self.gui.update_gui(self.board)
-        if self.status == "game_over":
-            return self.get_real_nn_game_state(), -10 + len(self.snake)
-        elif self.status == "Win":
-            return self.get_real_nn_game_state(), 10 + len(self.snake)
         
-        return self.get_real_nn_game_state(), len(self.snake)
+        return self.get_real_nn_game_state(), self.calculate_reward(self.status, len(self.snake))
+    
+
 
 
 
