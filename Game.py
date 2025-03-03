@@ -102,7 +102,6 @@ class Snake():
             self.set_next_state()
             if self.head:
                 self.gui.update_gui(self.board)
-            print(self.board)
             #Update GUI
         print(self.status)
 
@@ -123,8 +122,7 @@ class Snake():
                 snake.pop()
         nn_game_state[nn_game_state > 0] = 1
         nn_game_state[nn_game_state == -1] = 2
-        print(snake)
-        print(nn_game_state)
+
         self.snake = [(pos[0][0], pos[0][1]) for pos in snake]
         self.board = nn_game_state
 

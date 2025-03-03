@@ -68,19 +68,19 @@ class Reinforcement_Learning_System:
         for episode_nr in range(config["train_config"]['number_of_episodes']):
             game = Snake(config.get('game_size'))
             episode_data = []
-            
-            real_game_states = game.get_real_nn_game_state() #TODO: Fix this, it is probably wrong
+            real_game_states = np.zeros((config["train_config"]['number_of_steps_in_episode']+1, config.get('game_size'), config.get('game_size')))
+            real_game_states[0] = game.get_real_nn_game_state() #TODO: Fix this, it is probably wrong
             for k in range(config["train_config"]['number_of_steps_in_episode']):
                 
-                abstract_state = NNr.forward(real_game_states)
+                abstract_state = NNr.forward(real_game_states[k])
                 u_tree = U_tree(abstract_state, config["train_config"]["max_depth"], actions)
                 for m in range(config["train_config"]['number_of_MTC_simulations']):
                     u_tree.MCTS(actions, NNd, NNr, NNp)
                 final_policy_for_step = u_tree.normalize_visits() #higly suspect
                 root_value = u_tree.get_root_value()
                 next_action = u_tree.get_action(final_policy_for_step)
-                next_state, next_reward = game.simulate_game_step(real_game_states, next_action)
-                real_game_states[k]= next_state
+                next_state, next_reward = game.simulate_game_step(real_game_states[k], next_action)
+                real_game_states[k+1]= next_state
                 episode_data.append([real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward])
             self.episode_history.append(episode_data)
             # if len(episode_data) % config(['train_config']['training_interval']) == 0:
