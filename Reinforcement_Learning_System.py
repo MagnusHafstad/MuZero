@@ -6,17 +6,6 @@ import numpy as np
 from neural_network_manager import *
 
 
-class ANN:
-    # This is a placeholder class for the Artificial Neural Network for the typehinting. 
-    # Replace wiht actual ANN class when it is implemented.
-    pass
-
-def do_bptt():
-    """
-    This function should implement the backpropagation through time algorithm.
-    """
-    pass
-
 def load_config(file_path: str) -> dict:
     with open(file_path, 'r') as file:
         config = yaml.safe_load(file)
@@ -55,7 +44,7 @@ class Reinforcement_Learning_System:
         return action
         
 
-    def episode_loop(self) -> tuple[ANN, ANN, ANN]: 
+    def episode_loop(self) -> tuple[RepresentationNetwork, DynamicsNetwork, PredictionNetwork]: 
         """|
         This should return the trained ANN objects for the Q-function, the policy and the value function.
         """
@@ -85,8 +74,8 @@ class Reinforcement_Learning_System:
                 if game.status == "game_over":
                     break
             self.episode_history.append(episode_data)
-            # if len(episode_data) % config(['train_config']['training_interval']) == 0:
-            #     do_bptt() 
+            if len(episode_data) % config(['train_config']['training_interval']) == 0:
+                do_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) 
         
         return NNr, NNd, NNp
     
