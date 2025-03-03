@@ -1,7 +1,7 @@
 learning_rate: 0.01
 state_dim: 25
 abstract_state_dim: 14
-action_dim: 2
+action_dim: 1
 reward_dim: 1
 policy_dim: 4
 
