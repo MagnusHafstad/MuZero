@@ -74,7 +74,7 @@ def pick_activation_func(name):
 
 class RepresentationNetwork(nn.Module):
     """Representation Network (NNr) - Maps raw observations to abstract state representations."""
-    def __init__(self, input_dim=nn_config["state_dim"], layers=nn_config["representation"]["layers"], output_dim=nn_config["abstract_state_dim"], output_layer=nn_config["representation"]["output_layer"]):
+    def __init__(self, input_dim=config["game_size"]**2, layers=nn_config["representation"]["layers"], output_dim=nn_config["abstract_state_dim"], output_layer=nn_config["representation"]["output_layer"]):
         super().__init__()
         layers_list = []
         prev_dim = input_dim
