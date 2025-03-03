@@ -135,6 +135,8 @@ class Snake():
         self.get_next_location()
         self.set_next_state()
         print(self.board)
+        if self.head == True:
+            self.gui.update_gui(self.board)
         if self.status == "game_over":
             return self.get_real_nn_game_state(), -10
         elif self.status == "Win":
