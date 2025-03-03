@@ -102,6 +102,12 @@ class Snake():
             #Update GUI
         print(self.status)
 
+    def simulate_game_step(self, direction: str):
+        self.direction = direction
+        self.get_next_location()
+        self.set_next_state()
+        print(self.board)
+        
 
         
 
