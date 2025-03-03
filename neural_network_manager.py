@@ -92,7 +92,6 @@ class RepresentationNetwork(nn.Module):
         # Ensure state tensor has a batch dimension
         state=torch.tensor(state, dtype=torch.float32)
         state=state.view(-1)
-        print(state)
         if state.dim() == 1:
             state = state.unsqueeze(0)  # Add batch dimension
         return self.fc(state)
