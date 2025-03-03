@@ -112,8 +112,19 @@ class U_tree():
         """
         Policy should be a normalized 1-d vector
         """
-        action = np.random.choice(self.actions, p=policy)
+        action = np.random.choice(self.actions, p=policy) 
         return action
+    
+    def normalize_visits(self):
+        """
+        This function should normalize the visits of the children of a node.
+        """
+        policy = []
+        for child in self.root.children:
+            policy.append(child.visit_count)
+        policy = np.array(policy)
+        policy = policy/sum(policy)
+        return policy
 
 
 
