@@ -77,7 +77,7 @@ class Reinforcement_Learning_System:
                 u_tree = U_tree(abstract_state)
                 for m in range(config.get('number_of_MTC_simulations')):
                     u_tree.MCTS(actions, NNd, NNr, NNp)
-                final_policy_for_step = normalize_visits(leaf_node.get_visits()) #higly suspect
+                final_policy_for_step = u_tree.normalize_visits() #higly suspect
                 root_value = u_tree.get_root_value()
                 next_action = self.select_state(final_policy_for_step)
                 next_state, next_reward = game.simulate_game_step(real_game_states[-1], next_action)
