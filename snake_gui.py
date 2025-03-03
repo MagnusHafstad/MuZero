@@ -25,17 +25,23 @@ class SnakeGUI:
         pygame.display.flip()
 
     def user_input(self, prev_direction):
+        """
+        0: right
+        1: left
+        2: up
+        3: down
+        """
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 match event.key:
                     case pygame.K_UP:
-                        return "up"
+                        return 2
                     case pygame.K_DOWN:
-                        return "down"
+                        return 3
                     case pygame.K_LEFT:
-                        return "left"
+                        return  1
                     case pygame.K_RIGHT:
-                        return "right"
+                        return 0
         return prev_direction
 
 
