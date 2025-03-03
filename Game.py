@@ -23,7 +23,7 @@ class Snake():
         food = 2
         snake = 1
         self.board = np.zeros((size, size), dtype=int)
-        self.direction = "right"
+        self.direction = 0 #right (see get next location)
         self.snake = [(len(self.board)//2, 0)]
         self.board[self.snake[0][0], self.snake[0][1]] = snake
         self.board[(len(self.board)//2,len(self.board)//2)] = food  
@@ -43,13 +43,19 @@ class Snake():
     
 
     def get_next_location(self) -> tuple:
-        if self.direction == "right":
+        """
+        0: right
+        1: left
+        2: up
+        3: down
+        """
+        if self.direction == 0:
             return (self.snake[-1][0], self.snake[-1][1] + 1)
-        elif self.direction == "left":
+        elif self.direction == 1:
             return (self.snake[-1][0], self.snake[-1][1] - 1)
-        elif self.direction == "up":
+        elif self.direction == 2:
             return (self.snake[-1][0] - 1, self.snake[-1][1])
-        elif self.direction == "down":
+        elif self.direction == 3:
             return (self.snake[-1][0] + 1, self.snake[-1][1])
         
     def set_next_state(self) -> None:
