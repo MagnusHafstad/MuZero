@@ -76,20 +76,23 @@ class RepresentationNetwork(nn.Module):
     """Representation Network (NNr) - Maps raw observations to abstract state representations."""
     def __init__(self, input_dim=nn_config["state_dim"], layers=nn_config["representation"]["layers"], output_dim=nn_config["abstract_state_dim"], output_layer=nn_config["representation"]["output_layer"]):
         super().__init__()
-        layers = []
+        layers_list = []
         prev_dim = input_dim
         
         for hidden_dim in layers:
-            layers.append(nn.Linear(prev_dim, hidden_dim["dim"]))
-            layers.append(pick_activation_func(hidden_dim["type"]))
+            layers_list.append(nn.Linear(prev_dim, hidden_dim["dim"]))
+            layers_list.append(pick_activation_func(hidden_dim["type"]))
             prev_dim = hidden_dim["dim"]
         
-        layers.append(nn.Linear(prev_dim, output_dim))
-        layers.append(pick_activation_func(output_layer))
-        self.fc = nn.Sequential(*layers)
+        layers_list.append(nn.Linear(prev_dim, output_dim))
+        layers_list.append(pick_activation_func(output_layer))
+        self.fc = nn.Sequential(*layers_list)
     
     def forward(self, state): 
-                # Ensure state tensor has a batch dimension
+        # Ensure state tensor has a batch dimension
+        state=torch.tensor(state, dtype=torch.float32)
+        state=state.view(-1)
+        print(state)
         if state.dim() == 1:
             state = state.unsqueeze(0)  # Add batch dimension
         return self.fc(state)
@@ -111,14 +114,17 @@ class DynamicsNetwork(nn.Module):
 
         self.fc = nn.Sequential(*layers_list)
     
-    def forward(self, state, action):
+    def forward(self, abstract_state, action):
         # Ensure state and action tensors have a batch dimension
-        if state.dim() == 1:
-            state = state.unsqueeze(0)  # Add batch dimension
+        abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
+        action=torch.tensor(action, dtype=torch.float32)
+        action=action.view(-1)
+        if abstract_state.dim() == 1:
+            abstract_state = abstract_state.unsqueeze(0)  # Add batch dimension
         if action.dim() == 1:
             action = action.unsqueeze(0)  # Add batch dimension
 
-        x = torch.cat([state, action], dim=-1)  # Concatenate state and action
+        x = torch.cat([abstract_state, action], dim=-1)  # Concatenate state and action
         x = self.fc(x)
         next_state = x[:, :nn_config["abstract_state_dim"]]
         reward = x[:, nn_config["abstract_state_dim"]:]
@@ -149,6 +155,7 @@ class PredictionNetwork(nn.Module):
         self.value_activation = pick_activation_func(reward_output_layer)
     
     def forward(self, abstract_state):
+        abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
         x = self.shared_fc(abstract_state)
         
         # Policy output
