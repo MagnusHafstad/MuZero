@@ -101,7 +101,12 @@ class Snake():
         print(self.status)
 
     def get_game_state(self):
-        return (self.board, self.snake)
+        nn_board = np.copy(self.board)
+        nn_board[nn_board == 2] = -1
+        nn_board[nn_board == 1] = 0
+        for segment in range(len(self.snake)):
+            nn_board[self.snake[segment][0], self.snake[segment][1]] = segment + 1
+        return nn_board
     
     def simulate_game_step(self, real_game_state, direction: str):
         """Simulates one gamestep and returns the next state and reward
