@@ -119,6 +119,8 @@ class Snake():
         snake = []
         for i in range(1, len(nn_game_state)):
             snake.append(np.argwhere(nn_game_state == i))
+            if len(snake[-1]) == 0: # This is a very bad solution, but it works for now
+                snake.pop()
         nn_game_state[nn_game_state > 0] = 1
         nn_game_state[nn_game_state == -1] = 2
         print(snake)

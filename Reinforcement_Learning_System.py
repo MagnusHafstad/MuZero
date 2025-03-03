@@ -79,12 +79,12 @@ class Reinforcement_Learning_System:
                 final_policy_for_step = u_tree.normalize_visits() #higly suspect
                 root_value = u_tree.get_root_value()
                 next_action = u_tree.get_action(final_policy_for_step)
-                next_state, next_reward = game.simulate_game_step(real_game_states[-1], next_action)
+                next_state, next_reward = game.simulate_game_step(real_game_states, next_action)
                 real_game_states[k]= next_state
                 episode_data.append([real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward])
             self.episode_history.append(episode_data)
             # if len(episode_data) % config(['train_config']['training_interval']) == 0:
-            #     do_bptt()
+            #     do_bptt() 
         
         return NNr, NNd, NNp
     
