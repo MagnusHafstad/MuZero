@@ -117,7 +117,7 @@ class Snake():
     
     def nn_state_to_game_state(self, nn_game_state):
         snake = []
-        for i in range(1, len(nn_game_state)):
+        for i in range(1, len(nn_game_state)): # If you run into index errors with more than 4 snake segments check this line try config.get('game_size') instead of len(nn_game_state)
             snake.append(np.argwhere(nn_game_state == i))
             if len(snake[-1]) == 0: # This is a very bad solution, but it works for now
                 snake.pop()
@@ -137,7 +137,7 @@ class Snake():
         self.get_next_location()
         self.set_next_state()
         print(self.board)
-        return self.get_real_nn_game_state()
+        return self.get_real_nn_game_state(), len(self.snake)
 
 
 
