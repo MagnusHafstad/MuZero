@@ -12,6 +12,7 @@ def load_config(file_path: str) -> dict:
     return config
 
 config = load_config('./config.yaml')
+nn_config = load_config('./nn_config.yaml')
 
 class Reinforcement_Learning_System:
     def __init__(self):
@@ -51,9 +52,17 @@ class Reinforcement_Learning_System:
 
         # init ANN objects
         NNr = RepresentationNetwork()
+        if nn_config["representation"]["load"]:
+            NNr.load_state_dict(torch.load('NNr.pth'))
         NNd = DynamicsNetwork()
+        if nn_config["dynamics"]["load"]:
+            NNd.load_state_dict(torch.load('NNd.pth'))
         NNp = PredictionNetwork()
+        if nn_config["prediction"]["load"]:
+            NNp.load_state_dict(torch.load('NNp.pth'))
+
         actions = config.get('set_of_actions')
+        
         for episode_nr in range(config["train_config"]['number_of_episodes']):
             game = Snake(config.get('game_size'), head=config.get('head'))
             episode_data = []
