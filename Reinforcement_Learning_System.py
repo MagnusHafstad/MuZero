@@ -66,7 +66,7 @@ class Reinforcement_Learning_System:
         NNp = PredictionNetwork()
         actions = config.get('set_of_actions')
         for episode_nr in range(config["train_config"]['number_of_episodes']):
-            game = Snake(config.get('game_size'))
+            game = Snake(config.get('game_size'), head=True)
             episode_data = []
             real_game_states = np.zeros((config["train_config"]['number_of_steps_in_episode']+1, config.get('game_size'), config.get('game_size')))
             real_game_states[0] = game.get_real_nn_game_state() #TODO: Fix this, it is probably wrong
