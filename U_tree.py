@@ -84,7 +84,7 @@ class U_tree():
         state = node.state
         for _ in range(depth):
             state_policy, state_value = NNp(torch.tensor(state))
-            state_policy = state_policy.detach().numpy()
+            state_policy = state_policy.detach().numpy()[0]
             action = self.get_action(state_policy) 
             state, reward = NNd(state, [action])
 
