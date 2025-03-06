@@ -44,6 +44,7 @@ class Snake():
 
     def get_next_location(self) -> tuple:
         """
+        Calclulates the next location for the snake head based on the current direction
         0: right
         1: left
         2: up
@@ -59,6 +60,9 @@ class Snake():
             return (self.snake[-1][0] + 1, self.snake[-1][1])
         
     def set_next_state(self) -> None:
+        """
+        An in place function that updates the game state to the next game step
+        """
         next_location = self.get_next_location()
         
         if next_location[0] > len(self.board)-1 or next_location[1] > len(self.board)-1:
@@ -82,6 +86,7 @@ class Snake():
             self.status = "Win"
 
     def calculate_reward(self, status, len_snake) -> int:
+        """based on a game state"""
         if status == "game_over":
             return -10 + len_snake
         elif status == "Win":
@@ -89,6 +94,9 @@ class Snake():
         return len_snake
     
     def get_next_state_and_reward(self):
+        """
+        A pure function that returns the next game state and reward based on the current game state
+        """
         board, snake = self.nn_state_to_game_state()
         next_location = self.get_next_location()
         status = self.status
@@ -132,6 +140,9 @@ class Snake():
         self.direction = direction
 
     def game_loop(self) -> None:
+        """
+        Starts the game in a human player mode
+        """
         while self.status == "playing":
             if self.head:
                 self.clock.tick(3)
@@ -144,6 +155,9 @@ class Snake():
         print(self.status)
 
     def get_real_nn_game_state(self):
+        """
+        This uses the internal state of the game and translates it to the format our neural network expects
+        """
         nn_board = np.copy(self.board)
         nn_board[nn_board == 2] = -1
         nn_board[nn_board == 1] = 0
@@ -153,6 +167,9 @@ class Snake():
         return nn_board
     
     def nn_state_to_game_state(self, nn_game_state):
+        """
+        This function translates the neural network state to the game state as used in this file with a board and a snake
+        """
         snake = []
         for i in range(1, len(nn_game_state)): # If you run into index errors with more than 4 snake segments check this line try config.get('game_size') instead of len(nn_game_state)
             snake.append(np.argwhere(nn_game_state == i))
