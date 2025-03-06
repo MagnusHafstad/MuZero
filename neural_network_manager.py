@@ -133,17 +133,15 @@ class DynamicsNetwork(nn.Module):
     def forward(self, abstract_state, action):
         # Ensure state and action tensors have a batch dimension
         abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
+        abstract_state=abstract_state.view(-1)
         action=torch.tensor(action, dtype=torch.float32)
         action=action.view(-1)
-        if abstract_state.dim() == 1:
-            abstract_state = abstract_state.unsqueeze(0)  # Add batch dimension
-        if action.dim() == 1:
-            action = action.unsqueeze(0)  # Add batch dimension
+        
 
         x = torch.cat([abstract_state, action], dim=-1)  # Concatenate state and action
         x = self.fc(x)
-        next_state = x[:, :nn_config["abstract_state_dim"]]
-        reward = x[:, nn_config["abstract_state_dim"]:]
+        next_state = x[:nn_config["abstract_state_dim"]]
+        reward = x[nn_config["abstract_state_dim"]:]
         return next_state, reward
 
 class PredictionNetwork(nn.Module):

@@ -2,40 +2,47 @@ from U_tree import U_tree
 import torch
 import torch.nn as nn
 import numpy as np
+import Game
 
 
-import neural_network_manager
+from neural_network_manager import *
 import torch
 
-state_dim = 3
-abstract_state_dim = 5
-hidden_layers = [20, 20, 20]
-activation_func = torch.nn.ReLU
-action_dim = 1
-
-
-NNs = neural_network_manager.RepresentationNetwork(state_dim, abstract_state_dim, hidden_layers, activation_func)
-NNd= neural_network_manager.DynamicsNetwork(abstract_state_dim, action_dim, hidden_layers, activation_func)
-NNp = neural_network_manager.PredictionNetwork(abstract_state_dim, action_dim, hidden_layers, activation_func)
-
+NNr = RepresentationNetwork()
+if nn_config["representation"]["load"]:
+    NNr.load_state_dict(torch.load('NNr.pth'))
+NNd = DynamicsNetwork()
+if nn_config["dynamics"]["load"]:
+    NNd.load_state_dict(torch.load('NNd.pth'))
+NNp = PredictionNetwork()
+if nn_config["prediction"]["load"]:
+    NNp.load_state_dict(torch.load('NNp.pth'))
 
 
 def testTree():
     #Generate tree:
-    action_list = [1,2,3,4]
-    tree = U_tree([1,2,1,1,1], 10, action_list)
-   
-    for i in range(20):
-        tree.MCTS(action_list, NNd, NNs, NNp)
+    snake_game = Game.Snake(5)
+
+    snake_game.board = np.array([[0,0,0,0,0],
+                                 [1,1,1,0,0],
+                                 [1,0,2,0,0],
+                                 [0,0,0,0,0],
+                                 [0,0,0,0,0]])
+    snake_game.snake = snake_game.snake = [(2,0), (1,0), (1,1), (1,2)]
+    
+    nn_rep = snake_game.get_real_nn_game_state()
+
+    abs_state = NNr.forward(nn_rep)
+
+    action_list = [0,1,2,3]
+    tree = U_tree(nn_rep, 10, action_list)
+    
+    
+    for i in range(50):
+        tree.MCTS(NNd.forward, NNp.forward)
 
     tree.print_tree(tree.root)
 
+
 testTree()
-
-policy = [0.7,0.1,0.1,0.1]
-action_list = [1,2,3,4]
-tree = U_tree([1,2,1,1,1], 10, action_list)
-
-for i in range(10):
-    print(tree.get_action(policy))
 

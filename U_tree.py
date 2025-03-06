@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import torch
+from typing import Callable
 
 class Tree_node():
     def __init__(self, state, parent, reward, depth):
@@ -57,25 +58,26 @@ class U_tree():
         for child in node.children:
             self.print_tree(child, level + 1)      
 
-    def MCTS(self, actions, NNd, NNs, NNp):
+    def MCTS(self, calc_next_state: Callable, get_policy:Callable):
         """
         Do one full MC run through the tree
         """
         leaf_node = self.search_to_leaf()
         
         for i,action in enumerate(self.actions):
-            new_state, reward = NNd(leaf_node.state, [action])
+            print(leaf_node.state, [action])
+            new_state, reward = calc_next_state(leaf_node.state, [action])
             new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
             reward = int(reward.item())
             
             leaf_node.add_child(new_state,leaf_node,reward)
 
         child = random.choice(leaf_node.children)
-        accum_reward = self.do_rollout(child, self.d_max - child.depth, NNp, NNd, NNs)
+        accum_reward = self.do_rollout(child, self.d_max - child.depth, get_policy, calc_next_state)
         self.do_backpropagation(child, self.root, accum_reward) 
 
     
-    def do_rollout(self, node:Tree_node, depth, NNp, NNd, NNs) -> list[float]:
+    def do_rollout(self, node:Tree_node, depth, get_policy:Callable, calc_next_state:Callable) -> list[float]:
         """
         do further simulation untill desired depth of tree
         NOT DONE!!!
@@ -83,16 +85,16 @@ class U_tree():
         accum_reward = []
         state = node.state
         for _ in range(depth):
-            state_policy, state_value = NNp(torch.tensor(state))
-            state_policy = state_policy.detach().numpy()[0]
+            state_policy, state_value = get_policy(torch.tensor(state))
+            state_policy = state_policy.detach().numpy()
             action = self.get_action(state_policy) 
-            state, reward = NNd(state, [action])
+            state, reward = calc_next_state(state, [action])
 
             state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
             reward = int(reward.item())
             accum_reward.append(reward)
 
-        state_policy, state_value = NNp(torch.tensor(state))
+        state_policy, state_value = get_policy(torch.tensor(state))
 
         state_value = state_value.item()
         accum_reward.append(state_value)
