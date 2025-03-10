@@ -119,11 +119,17 @@ class Snake():
         temp_game.board = np.copy(state)
         temp_game.direction = action[0]
         temp_game.set_next_state()
-        return temp_game.board, temp_game.calculate_reward(temp_game.status, np.max(temp_game.board))
+        return temp_game.board, temp_game.calculate_reward(temp_game.status, np.max(temp_game.board)), temp_game.status
     
     def get_policy(self, node):
-        policy = [0.25,0.25,0.25,0.25]
-        state_value = self.calculate_reward(self.status, np.max(self.board))
+        parent = node.parent
+        policy = []
+        for child in parent.children:
+            policy.append(child.visit_count)
+        policy = np.array(policy)
+        policy = policy/sum(policy)
+        #policy = [0.25,0.25,0.25,0.25]
+        state_value = self.calculate_reward(node.status, np.max(self.board))
         return policy, state_value
         
 

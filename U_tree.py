@@ -5,22 +5,23 @@ from typing import Callable
 
 
 class Tree_node():
-    def __init__(self, state, parent, reward, depth):
+    def __init__(self, state, parent, reward, depth, status):
         self.state = state
         self.children = []
         self.parent = parent
         self.visit_count = 1
         self.reward = reward
         self.depth = depth
+        self.status = status
 
-    def add_child(self, state, parent, reward):
+    def add_child(self, state, parent, reward, status):
 
-        self.children.append(Tree_node(state, parent, reward, self.depth + 1))
+        self.children.append(Tree_node(state, parent, reward, self.depth + 1, status))
         
 
 class U_tree():
     def __init__(self, abstract_state, d_max, actions):
-        self.root = Tree_node(abstract_state, None, 0, 0)
+        self.root = Tree_node(abstract_state, None, 0, 0, "playing")
         self.d_max = d_max
         self.actions = actions
         # self.game = game
@@ -57,7 +58,7 @@ class U_tree():
 
 ### only for debug
     def print_tree(self, node, level=0):
-        print(" " * (level * 4) + f" Reward: {node.reward}, Visits: {node.visit_count}") #State: {node.state},
+        print(" " * (level * 4) + f"depth: {node.depth} Reward: {node.reward}, Visits: {node.visit_count}") #State: {node.state},
         for child in node.children:
             self.print_tree(child, level + 1)      
 
@@ -68,11 +69,11 @@ class U_tree():
         leaf_node = self.search_to_leaf()
         
         for i,action in enumerate(self.actions):
-            new_state, reward = calc_next_state(leaf_node.state, [action])
-            new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
-            reward = int(reward.item())
+            new_state, reward, status  = calc_next_state(leaf_node.state, [action])
+            #new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
+            #reward = int(reward.item())
             
-            leaf_node.add_child(new_state,leaf_node,reward)
+            leaf_node.add_child(new_state,leaf_node,reward, status)
 
         child = random.choice(leaf_node.children)
         accum_reward = self.do_rollout(child, self.d_max - child.depth, get_policy, calc_next_state)
@@ -87,16 +88,18 @@ class U_tree():
         accum_reward = []
         state = node.state
         for _ in range(depth):
-            state_policy, state_value = get_policy(torch.tensor(state))
-            state_policy = state_policy.detach().numpy()
+            if node.status != "playing":
+                break
+            state_policy, state_value = get_policy(node)
+            #state_policy = state_policy.detach().numpy()
             action = self.get_action(state_policy) 
-            state, reward = calc_next_state(state, [action])
+            state, reward, status = calc_next_state(state, [action])
 
-            state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
-            reward = int(reward.item())
+            #state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
+            #reward = int(reward.item())
             accum_reward.append(reward)
 
-        state_policy, state_value = get_policy(torch.tensor(state))
+        state_policy, state_value = get_policy(node)
 
         state_value = state_value.item()
         accum_reward.append(state_value)
@@ -119,7 +122,7 @@ class U_tree():
         """
         Policy should be a normalized 1-d vector
         """
-        action = np.random.choice(self.actions, p=policy) 
+        action = np.argmax(policy)#, p=policy) 
         return action
     
     def normalize_visits(self):
