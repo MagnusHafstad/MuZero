@@ -55,37 +55,43 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
         rewards = torch.tensor(rewards[i], dtype=torch.float32)
     
         abstract_state = NNr(state)
+        print("abstract_state", abstract_state)
         next_abstract_state, predicted_reward = NNd(abstract_state, actions)
         predicted_policies, predicted_values = NNp(next_abstract_state)
 
         predictions = [predicted_policies, predicted_values, predicted_reward]
         true = [policies, values, rewards]
 
-        #Can add momentum
-        optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
-        optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
-        optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.05) 
-        
-        optimizerR.zero_grad()
-        optimizerD.zero_grad()
-        optimizerP.zero_grad()
-
         loss_fn = nn.MSELoss()
+
+        optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
+        optimizerR.zero_grad()
         lossR = loss_fn(predicted_values, values)
-        lossD = loss_fn(predicted_reward, rewards)
-        lossP = loss_fn(predicted_policies, policies)
-
         lossR.backward(retain_graph=True)
-        lossD.backward(retain_graph=True)
-        lossP.backward()
-
-        nn.utils.clip_grad_norm_(NNr.parameters(), 3)
-        nn.utils.clip_grad_norm_(NNd.parameters(), 3)
-        nn.utils.clip_grad_norm_(NNp.parameters(), 3) 
-
+        torch.nn.utils.clip_grad_norm_(NNr.parameters(), 3)
         optimizerR.step()
+        print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
+
+        optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
+        optimizerD.zero_grad()
+        lossD = loss_fn(predicted_reward, rewards)
+        lossD.backward(retain_graph=True)
         optimizerD.step()
+        torch.nn.utils.clip_grad_norm_(NNd.parameters(), 3)
+        print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
+
+        optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.05)
+        optimizerP.zero_grad()
+        lossP = loss_fn(predicted_policies, policies)
+        lossP.backward()
+        print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
+        torch.nn.utils.clip_grad_norm_(NNp.parameters(), 3)
         optimizerP.step()
+        
+
+
+        print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
+
 
     return NNr, NNd, NNp
 
