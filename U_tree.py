@@ -19,7 +19,7 @@ class Tree_node():
         
 
 class U_tree():
-    def __init__(self, abstract_state, d_max, actions, game):
+    def __init__(self, abstract_state, d_max, actions):
         self.root = Tree_node(abstract_state, None, 0, 0)
         self.d_max = d_max
         self.actions = actions
@@ -96,7 +96,7 @@ class U_tree():
             reward = int(reward.item())
             accum_reward.append(reward)
 
-        state_policy, state_value = get_policy(torch.tensor(state), self.game)
+        state_policy, state_value = get_policy(torch.tensor(state))#, self.game)
 
         state_value = state_value.item()
         accum_reward.append(state_value)
