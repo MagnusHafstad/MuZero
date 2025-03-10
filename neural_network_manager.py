@@ -40,13 +40,13 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
         policies = []
         values = []
         rewards = []
-        
         for ep in episode:
             state.append(ep[0])
             values.append(ep[1])
             policies.append(ep[2])
             actions.append(ep[3])
             rewards.append(ep[4])
+
         i = random.randint(0, len(state)-1)
         state = state[i]
         actions = actions[i]
@@ -54,38 +54,38 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
         values = torch.tensor(values[i], dtype=torch.float32)
         rewards = torch.tensor(rewards[i], dtype=torch.float32)
     
-    abstract_state = NNr(state)
-    next_abstract_state, predicted_reward = NNd(abstract_state, actions)
-    predicted_policies, predicted_values = NNp(next_abstract_state)
+        abstract_state = NNr(state)
+        next_abstract_state, predicted_reward = NNd(abstract_state, actions)
+        predicted_policies, predicted_values = NNp(next_abstract_state)
 
-    predictions = [predicted_policies, predicted_values, predicted_reward]
-    true = [policies, values, rewards]
+        predictions = [predicted_policies, predicted_values, predicted_reward]
+        true = [policies, values, rewards]
 
-    #Can add momentum
-    optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
-    optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
-    optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.05) 
-    
-    optimizerR.zero_grad()
-    optimizerD.zero_grad()
-    optimizerP.zero_grad()
+        #Can add momentum
+        optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
+        optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
+        optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.05) 
+        
+        optimizerR.zero_grad()
+        optimizerD.zero_grad()
+        optimizerP.zero_grad()
 
-    loss_fn = nn.MSELoss()
-    lossR = loss_fn(predicted_values, values)
-    lossD = loss_fn(predicted_reward, rewards)
-    lossP = loss_fn(predicted_policies, policies)
+        loss_fn = nn.MSELoss()
+        lossR = loss_fn(predicted_values, values)
+        lossD = loss_fn(predicted_reward, rewards)
+        lossP = loss_fn(predicted_policies, policies)
 
-    lossR.backward(retain_graph=True)
-    lossD.backward(retain_graph=True)
-    lossP.backward()
+        lossR.backward(retain_graph=True)
+        lossD.backward(retain_graph=True)
+        lossP.backward()
 
-    nn.utils.clip_grad_norm_(NNr.parameters(), 3)
-    nn.utils.clip_grad_norm_(NNd.parameters(), 3)
-    nn.utils.clip_grad_norm_(NNp.parameters(), 3) 
+        nn.utils.clip_grad_norm_(NNr.parameters(), 3)
+        nn.utils.clip_grad_norm_(NNd.parameters(), 3)
+        nn.utils.clip_grad_norm_(NNp.parameters(), 3) 
 
-    optimizerR.step()
-    optimizerD.step()
-    optimizerP.step()
+        optimizerR.step()
+        optimizerD.step()
+        optimizerP.step()
 
     return NNr, NNd, NNp
 
