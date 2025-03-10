@@ -41,12 +41,18 @@ class U_tree():
     def search_to_leaf(self) -> Tree_node:
         if len(self.root.children) == 0:
             return self.root 
+
         current_node = self.root
+        visited_nodes = set()
 
         while len(current_node.children) != 0:
+            if current_node in visited_nodes:  # Prevent infinite loops
+                break
+            visited_nodes.add(current_node)
             current_node = self.select_child_node(current_node)     
+
         return current_node
-    
+
     def select_child_node(self, node)-> Tree_node:
         current_UCB = -100
         for child in node.children:
@@ -67,6 +73,9 @@ class U_tree():
         Do one full MC run through the tree
         """
         leaf_node = self.search_to_leaf()
+        
+        if len(leaf_node.children)!=0:
+            raise ValueError("Leaf node should not have children")
         
         for i,action in enumerate(self.actions):
             new_state, reward, status  = calc_next_state(leaf_node.state, [action])
