@@ -128,6 +128,7 @@ class Snake():
         Starts the game in a human player mode
         """
         while self.status == "playing":
+            
             if self.head:
                 self.clock.tick(3)
                 self.direction = self.gui.user_input(self.direction)

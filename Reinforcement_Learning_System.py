@@ -73,7 +73,7 @@ class Reinforcement_Learning_System:
                 abstract_state = NNr.forward(real_game_states[k])
                 u_tree = U_tree(abstract_state, config["train_config"]["max_depth"], actions)
                 for m in range(config["train_config"]['number_of_MTC_simulations']):
-                    u_tree.MCTS(actions, NNd, NNr, NNp)
+                    u_tree.MCTS(NNd, NNp)
                 final_policy_for_step = u_tree.normalize_visits() #higly suspect
                 root_value = u_tree.get_root_value()
                 next_action = u_tree.get_action(final_policy_for_step)
