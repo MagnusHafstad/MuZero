@@ -23,7 +23,7 @@ class U_tree():
         self.root = Tree_node(abstract_state, None, 0, 0)
         self.d_max = d_max
         self.actions = actions
-        self.game = game
+        # self.game = game
 
 
     def get_root_value(self):
@@ -69,8 +69,8 @@ class U_tree():
         
         for i,action in enumerate(self.actions):
             new_state, reward = calc_next_state(leaf_node.state, [action])
-            #new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
-            #reward = int(reward.item())
+            new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
+            reward = int(reward.item())
             
             leaf_node.add_child(new_state,leaf_node,reward)
 
@@ -87,13 +87,13 @@ class U_tree():
         accum_reward = []
         state = node.state
         for _ in range(depth):
-            state_policy, state_value = get_policy(state, self.game)#(torch.tensor(state))
-            #state_policy = state_policy.detach().numpy()
+            state_policy, state_value = get_policy(torch.tensor(state))
+            state_policy = state_policy.detach().numpy()
             action = self.get_action(state_policy) 
             state, reward = calc_next_state(state, [action])
 
-            #state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
-            #reward = int(reward.item())
+            state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
+            reward = int(reward.item())
             accum_reward.append(reward)
 
         state_policy, state_value = get_policy(torch.tensor(state), self.game)
