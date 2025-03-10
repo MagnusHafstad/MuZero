@@ -9,14 +9,14 @@ class Tree_node():
         self.state = state
         self.children = []
         self.parent = parent
-        self.visit_count = 1
+        self.visit_count = 0
         self.reward = reward
         self.depth = depth
         self.status = status
 
     def add_child(self, state, parent, reward, status):
-
-        self.children.append(Tree_node(state, parent, reward, self.depth + 1, status))
+        child = Tree_node(state, parent, reward, self.depth + 1, status)
+        self.children.append(child)
         
 
 class U_tree():
@@ -35,7 +35,11 @@ class U_tree():
         Use upper confidence bounds(UCB) as tree policy
         """
         c = 1
-        return node.reward + c * np.sqrt(np.log(node.parent.visit_count)/node.visit_count)
+        visit_count = node.visit_count
+        if node.visit_count == 0:
+            visit_count = 0.01
+
+        return node.reward + c * np.sqrt(np.log(node.parent.visit_count)/visit_count)
 
     
     def search_to_leaf(self) -> Tree_node:
@@ -49,18 +53,25 @@ class U_tree():
             if current_node in visited_nodes:  # Prevent infinite loops
                 break
             visited_nodes.add(current_node)
-            current_node = self.select_child_node(current_node)     
+            current_node = self.select_child_node(current_node)
+
+        #print(f"Current Node Depth: {current_node.depth}, Children: {len(current_node.children)}")     
 
         return current_node
+    
 
     def select_child_node(self, node)-> Tree_node:
-        current_UCB = -100
+        current_UCB = float('-inf')
         for child in node.children:
-            UCB = self.tree_policy(child)
-            if UCB > current_UCB:
-                current_UCB = UCB
-                node = child
-        return node
+            ucb = self.tree_policy(child)
+            if ucb > current_UCB:
+                current_UCB = ucb
+                best_child = child
+
+        if best_child is None:
+            raise ValueError(f"Last parent {node.depth} has children {node.children}")
+
+        return best_child
 
 ### only for debug
     def print_tree(self, node, level=0):
@@ -122,10 +133,8 @@ class U_tree():
         node.reward = sum(accum_rewards)
         accum_rewards.append(node.reward)
         if node != goal_node:
-            self.do_backpropagation(node.parent,goal_node, accum_rewards) 
+            self.do_backpropagation(node.parent, goal_node, accum_rewards) 
 
-
-        pass
 
     def get_action(self, policy): 
         """
@@ -143,6 +152,7 @@ class U_tree():
             policy.append(child.visit_count)
         policy = np.array(policy)
         policy = policy/sum(policy)
+        print(policy)
         return policy
 
 

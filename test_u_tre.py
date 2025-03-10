@@ -35,35 +35,33 @@ def testTree():
     #                              [0,0,0,0,0]])
     # snake_game.snake = snake_game.snake = [(2,0), (1,0), (1,1), (1,2)]
     
-    
-
     action_list = [0,1,2,3]
-    
-    
-    # for i in range(10):
-    #     tree.MCTS(snake_game.get_next_state_and_reward, snake_game.get_policy)
+    MCT_game = snake_game.copy()
+    tree = U_tree(MCT_game.board, 50, action_list)
 
     loopnr = 0
     while snake_game.status == "playing":
         MCT_game = snake_game.copy()
-        tree = U_tree(MCT_game.board, 5, action_list)
+        tree = U_tree(MCT_game.board, 1, action_list)
         tree.print_tree(tree.root)
         #print(snake_game.board)
         
-        for i in tqdm.tqdm(range(300)):
+        for i in tqdm.tqdm(range(500)):
             tree.MCTS(MCT_game.get_next_state_and_reward, MCT_game.get_policy)
+        #tree.print_tree(tree.root)
         snake_game.direction = tree.get_action(tree.normalize_visits())
         snake_game.get_next_location()
         snake_game.set_next_state()
         print(snake_game.board, loopnr)
-        #print()
+
         if config.get('head'):
             snake_game.gui.update_gui(snake_game.board)
 
         loopnr += 1
-    tree.print_tree(tree.root)
+    #tree.print_tree(tree.root)
 
 
 
 testTree()
+
 
