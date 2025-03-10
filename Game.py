@@ -58,6 +58,9 @@ class Snake():
             return (self.snake[-1][0] - 1, self.snake[-1][1])
         elif self.direction == 3:
             return (self.snake[-1][0] + 1, self.snake[-1][1])
+        else:
+            self.direction = self.direction[0]
+            self.get_next_location()
         
     def set_next_state(self) -> None:
         """
@@ -93,11 +96,11 @@ class Snake():
             return 10 + len_snake
         return len_snake
     
-    def get_next_state_and_reward(self):
+    def get_next_state_and_reward(self, real_game_state):
         """
         A pure function that returns the next game state and reward based on the current game state
         """
-        board, snake = self.nn_state_to_game_state()
+        board, snake = self.nn_state_to_game_state(real_game_state)
         next_location = self.get_next_location()
         status = self.status
         
@@ -144,6 +147,7 @@ class Snake():
         Starts the game in a human player mode
         """
         while self.status == "playing":
+            
             if self.head:
                 self.clock.tick(3)
                 self.direction = self.gui.user_input(self.direction)

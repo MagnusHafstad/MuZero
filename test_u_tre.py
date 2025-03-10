@@ -19,29 +19,39 @@ if nn_config["prediction"]["load"]:
     NNp.load_state_dict(torch.load('NNp.pth'))
 
 
+
+def get_policy(node, snake_game):
+    policy = [0.25,0.25,0.25,0.25]
+    state_reward = snake_game.get_next_state_and_reward(node)[1]
+    return policy, state_reward
+
+
 def testTree():
     #Generate tree:
     snake_game = Game.Snake(5)
 
-    snake_game.board = np.array([[0,0,0,0,0],
-                                 [1,1,1,0,0],
-                                 [1,0,2,0,0],
-                                 [0,0,0,0,0],
-                                 [0,0,0,0,0]])
-    snake_game.snake = snake_game.snake = [(2,0), (1,0), (1,1), (1,2)]
+    # snake_game.board = np.array([[0,0,0,0,0],
+    #                              [0,0,0,0,0],
+    #                              [1,0,2,0,0],
+    #                              [0,0,0,0,0],
+    #                              [0,0,0,0,0]])
+    # snake_game.snake = snake_game.snake = [(2,0), (1,0), (1,1), (1,2)]
     
     nn_rep = snake_game.get_real_nn_game_state()
 
     abs_state = NNr.forward(nn_rep)
 
     action_list = [0,1,2,3]
-    tree = U_tree(nn_rep, 10, action_list)
+    tree = U_tree(snake_game.get_real_nn_game_state(), 10, action_list, snake_game)
     
-    
-    for i in range(50):
-        tree.MCTS(NNd.forward, NNp.forward)
+
+    for i in range(10):
+        tree.MCTS(snake_game.simulate_game_step, get_policy)
 
     tree.print_tree(tree.root)
+
+
+
 
 
 testTree()

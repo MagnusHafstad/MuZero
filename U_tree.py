@@ -3,6 +3,7 @@ import random
 import torch
 from typing import Callable
 
+
 class Tree_node():
     def __init__(self, state, parent, reward, depth):
         self.state = state
@@ -18,10 +19,12 @@ class Tree_node():
         
 
 class U_tree():
-    def __init__(self, abstract_state, d_max, actions):
+    def __init__(self, abstract_state, d_max, actions, game):
         self.root = Tree_node(abstract_state, None, 0, 0)
         self.d_max = d_max
         self.actions = actions
+        self.game = game
+
 
     def get_root_value(self):
         return self.root.reward
@@ -31,7 +34,7 @@ class U_tree():
         Use upper confidence bounds(UCB) as tree policy
         """
         c = 1
-        return node.reward + c* np.sqrt(np.log(node.parent.visit_count)/node.visit_count)
+        return node.reward + c * np.sqrt(np.log(node.parent.visit_count)/node.visit_count)
 
     
     def search_to_leaf(self) -> Tree_node:
@@ -54,7 +57,7 @@ class U_tree():
 
 ### only for debug
     def print_tree(self, node, level=0):
-        print(" " * (level * 4) + f"State: {node.state}, Reward: {node.reward}, Visits: {node.visit_count}")
+        print(" " * (level * 4) + f" Reward: {node.reward}, Visits: {node.visit_count}") #State: {node.state},
         for child in node.children:
             self.print_tree(child, level + 1)      
 
@@ -65,10 +68,9 @@ class U_tree():
         leaf_node = self.search_to_leaf()
         
         for i,action in enumerate(self.actions):
-            print(leaf_node.state, [action])
             new_state, reward = calc_next_state(leaf_node.state, [action])
-            new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
-            reward = int(reward.item())
+            #new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
+            #reward = int(reward.item())
             
             leaf_node.add_child(new_state,leaf_node,reward)
 
@@ -85,16 +87,16 @@ class U_tree():
         accum_reward = []
         state = node.state
         for _ in range(depth):
-            state_policy, state_value = get_policy(torch.tensor(state))
-            state_policy = state_policy.detach().numpy()
+            state_policy, state_value = get_policy(state, self.game)#(torch.tensor(state))
+            #state_policy = state_policy.detach().numpy()
             action = self.get_action(state_policy) 
             state, reward = calc_next_state(state, [action])
 
-            state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
-            reward = int(reward.item())
+            #state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
+            #reward = int(reward.item())
             accum_reward.append(reward)
 
-        state_policy, state_value = get_policy(torch.tensor(state))
+        state_policy, state_value = get_policy(torch.tensor(state), self.game)
 
         state_value = state_value.item()
         accum_reward.append(state_value)
