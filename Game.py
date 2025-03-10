@@ -3,6 +3,7 @@ import numpy as np
 import snake_gui
 import yaml
 import copy
+import numpy as np
 
 def load_config(file_path: str) -> dict:
     with open(file_path, 'r') as file:
@@ -115,7 +116,7 @@ class Snake():
         Pure. Returns the next state and reward based on the action taken
         """
         temp_game = self.copy()
-        temp_game.board = state
+        temp_game.board = np.copy(state)
         temp_game.direction = action[0]
         temp_game.set_next_state()
         return temp_game.board, temp_game.calculate_reward(temp_game.status, np.max(temp_game.board))

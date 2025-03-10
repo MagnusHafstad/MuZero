@@ -9,15 +9,15 @@ import copy
 from neural_network_manager import *
 import torch
 
-NNr = RepresentationNetwork()
-if nn_config["representation"]["load"]:
-    NNr.load_state_dict(torch.load('NNr.pth'))
-NNd = DynamicsNetwork()
-if nn_config["dynamics"]["load"]:
-    NNd.load_state_dict(torch.load('NNd.pth'))
-NNp = PredictionNetwork()
-if nn_config["prediction"]["load"]:
-    NNp.load_state_dict(torch.load('NNp.pth'))
+# NNr = RepresentationNetwork()
+# if nn_config["representation"]["load"]:
+#     NNr.load_state_dict(torch.load('NNr.pth'))
+# NNd = DynamicsNetwork()
+# if nn_config["dynamics"]["load"]:
+#     NNd.load_state_dict(torch.load('NNd.pth'))
+# NNp = PredictionNetwork()
+# if nn_config["prediction"]["load"]:
+#     NNp.load_state_dict(torch.load('NNp.pth'))
 
 
 
@@ -43,13 +43,13 @@ def testTree():
     # for i in range(10):
     #     tree.MCTS(snake_game.get_next_state_and_reward, snake_game.get_policy)
 
+    loopnr = 0
     while snake_game.status == "playing":
-        loopnr = 0
         MCT_game = snake_game.copy()
-        tree = U_tree(MCT_game.board, 10, action_list)
-        print(snake_game.board)
+        tree = U_tree(MCT_game.board, 7, action_list)
+        #print(snake_game.board)
         
-        for i in range(5):
+        for i in range(10):
             tree.MCTS(MCT_game.get_next_state_and_reward, MCT_game.get_policy)
         #tree.print_tree(tree.root)
         snake_game.direction = tree.get_action(tree.normalize_visits())
