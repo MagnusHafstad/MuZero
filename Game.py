@@ -2,6 +2,7 @@ import pygame
 import numpy as np
 import snake_gui
 import yaml
+import copy
 
 def load_config(file_path: str) -> dict:
     with open(file_path, 'r') as file:
@@ -32,6 +33,19 @@ class Snake():
         if self.head:
             self.gui = snake_gui.SnakeGUI(size)
             self.clock = pygame.time.Clock()
+
+    def copy(self):
+        """
+        Returns a deep copy of the current game state
+        """
+        new_snake = Snake(len(self.board), self.head)
+        new_snake.board = np.copy(self.board)
+        new_snake.direction = self.direction
+        new_snake.status = self.status
+        if self.head:
+            new_snake.gui = self.gui
+            new_snake.clock = self.clock
+        return new_snake
     
     def place_food(self) -> None:
         empty_cells = np.argwhere(self.board == 0)
@@ -96,14 +110,20 @@ class Snake():
         
         
 
-    def get_next_state_and_reward(self, action: int) -> tuple:
+    def get_next_state_and_reward(self,state,  action: int) -> tuple:
         """
         Pure. Returns the next state and reward based on the action taken
         """
-        temp_game = self
-        temp_game.direction = action
+        temp_game = self.copy()
+        temp_game.board = state
+        temp_game.direction = action[0]
         temp_game.set_next_state()
-        return temp_game.board, self.calculate_reward(temp_game.status, np.max(temp_game.board))
+        return temp_game.board, temp_game.calculate_reward(temp_game.status, np.max(temp_game.board))
+    
+    def get_policy(self, node):
+        policy = [0.25,0.25,0.25,0.25]
+        state_value = self.calculate_reward(self.status, np.max(self.board))
+        return policy, state_value
         
 
     def calculate_reward(self, status, len_snake) -> int:
@@ -153,4 +173,6 @@ class Snake():
             self.gui.update_gui(self.board)
         
         return self.board, self.calculate_reward(self.status, np.max(self.board))
+    
+
     

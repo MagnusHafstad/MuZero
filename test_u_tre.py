@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import Game
+import copy
 
 
 from neural_network_manager import *
@@ -20,10 +21,7 @@ if nn_config["prediction"]["load"]:
 
 
 
-def get_policy(node, snake_game):
-    policy = [0.25,0.25,0.25,0.25]
-    state_reward = snake_game.get_next_state_and_reward(node)[1]
-    return policy, state_reward
+
 
 
 def testTree():
@@ -37,20 +35,31 @@ def testTree():
     #                              [0,0,0,0,0]])
     # snake_game.snake = snake_game.snake = [(2,0), (1,0), (1,1), (1,2)]
     
-    nn_rep = snake_game.get_real_nn_game_state()
-
-    abs_state = NNr.forward(nn_rep)
-
-    action_list = [0,1,2,3]
-    tree = U_tree(snake_game.get_real_nn_game_state(), 10, action_list, snake_game)
     
 
-    for i in range(10):
-        tree.MCTS(snake_game.simulate_game_step, get_policy)
+    action_list = [0,1,2,3]
+    
+    
+    # for i in range(10):
+    #     tree.MCTS(snake_game.get_next_state_and_reward, snake_game.get_policy)
 
-    tree.print_tree(tree.root)
+    while snake_game.status == "playing":
+        loopnr = 0
+        MCT_game = snake_game.copy()
+        tree = U_tree(MCT_game.board, 10, action_list)
+        print(snake_game.board)
+        
+        for i in range(5):
+            tree.MCTS(MCT_game.get_next_state_and_reward, MCT_game.get_policy)
+        #tree.print_tree(tree.root)
+        snake_game.direction = tree.get_action(tree.normalize_visits())
+        snake_game.get_next_location()
+        snake_game.set_next_state()
+        print(snake_game.board, loopnr)
+        if config.get('head'):
+            snake_game.gui.update_gui(snake_game.board)
 
-
+        loopnr += 1
 
 
 

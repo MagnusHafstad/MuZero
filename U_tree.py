@@ -69,8 +69,8 @@ class U_tree():
         
         for i,action in enumerate(self.actions):
             new_state, reward = calc_next_state(leaf_node.state, [action])
-            new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
-            reward = int(reward.item())
+            #new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
+            #reward = int(reward.item())
             
             leaf_node.add_child(new_state,leaf_node,reward)
 
@@ -88,12 +88,12 @@ class U_tree():
         state = node.state
         for _ in range(depth):
             state_policy, state_value = get_policy(torch.tensor(state))
-            state_policy = state_policy.detach().numpy()
+            #state_policy = state_policy.detach().numpy()
             action = self.get_action(state_policy) 
             state, reward = calc_next_state(state, [action])
 
-            state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
-            reward = int(reward.item())
+            #state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
+            #reward = int(reward.item())
             accum_reward.append(reward)
 
         state_policy, state_value = get_policy(torch.tensor(state))#, self.game)
@@ -119,7 +119,7 @@ class U_tree():
         """
         Policy should be a normalized 1-d vector
         """
-        action = np.random.choice(self.actions, p=policy) 
+        action = np.argmin(policy)#np.random.choice(self.actions, p=policy) 
         return action
     
     def normalize_visits(self):
