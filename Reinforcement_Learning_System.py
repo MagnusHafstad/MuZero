@@ -52,14 +52,14 @@ class Reinforcement_Learning_System:
 
         # init ANN objects
         NNr = RepresentationNetwork()
-        if nn_config["representation"]["load"]:
-            NNr.load_state_dict(torch.load('NNr.pth'))
+        if nn_config["representation"]["load_path"]:
+            NNr.load_state_dict(torch.load(nn_config["representation"]["load"] +'.pth'))
         NNd = DynamicsNetwork()
-        if nn_config["dynamics"]["load"]:
-            NNd.load_state_dict(torch.load('NNd.pth'))
+        if nn_config["dynamics"]["load_path"]:
+            NNd.load_state_dict(torch.load(nn_config["dynamics"]["load"]+'.pth'))
         NNp = PredictionNetwork()
-        if nn_config["prediction"]["load"]:
-            NNp.load_state_dict(torch.load('NNp.pth'))
+        if nn_config["prediction"]["load_path"]:
+            NNp.load_state_dict(torch.load(nn_config["prediction"]["load"]+'.pth'))
 
         actions = config.get('set_of_actions')
         
@@ -97,4 +97,14 @@ class Reinforcement_Learning_System:
         return NNr, NNd, NNp
     
 system = Reinforcement_Learning_System()
-system.episode_loop()
+NNr, NNd, NNp = system.episode_loop()
+# Save the models
+torch.save(NNr.state_dict(), nn_config["representation"]["save"]+'.pth')
+if nn_config["representation"]["save_path"]:
+    NNr.load_state_dict(torch.save(NNr.state_dict(), nn_config["representation"]["save_path"] +'.pth'))
+
+if nn_config["dynamics"]["save_path"]:
+    NNd.load_state_dict(torch.save(NNd.state_dict(), nn_config["dynamics"]["save_path"]+'.pth'))
+
+if nn_config["prediction"]["save_path"]:
+    torch.save(NNp.state_dict(), nn_config["prediction"]["save_path"]+'.pth')

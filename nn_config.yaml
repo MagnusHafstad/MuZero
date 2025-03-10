@@ -7,7 +7,10 @@ policy_dim: 4
 
 representation:
   learning_rate: 0.01
-  load: False 
+  #If the load_path empty, the network will be initialized randomly. Don't include .pth
+  load_path:  
+  #If the save_path empty, the network will not be saved. Don't include .pth
+  save_path:
   output_layer: linear
   layers: 
     - type: relu #relu, sigmoid, softmax, linear, etc.
@@ -17,7 +20,10 @@ representation:
  
 dynamics:
   learning_rate: 0.01
-  load: False
+  #If the load_path empty, the network will be initialized randomly. Don't include .pth
+  load_path:  
+  #If the save_path empty, the network will not be saved. Don't include .pth
+  save_path:
   output_layer: linear
   layers: 
     - type: relu #relu, sigmoid, softmax, linear, etc.
@@ -27,7 +33,10 @@ dynamics:
 
 prediction:
   learning_rate: 0.01
-  load: False
+  #If the load_path empty, the network will be initialized randomly. Don't include .pth
+  load_path:  
+  #If the save_path empty, the network will not be saved. Don't include .pth
+  save_path:
   policy_output_layer: softmax
   reward_output_layer: linear
   layers: 
@@ -35,3 +44,5 @@ prediction:
       dim: 16
     - type: sigmoid
       dim: 16
+
+test: yo
