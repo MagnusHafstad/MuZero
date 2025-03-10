@@ -52,29 +52,36 @@ class Reinforcement_Learning_System:
 
         # init ANN objects
         NNr = RepresentationNetwork()
-        if nn_config["representation"]["load"]:
-            NNr.load_state_dict(torch.load('NNr.pth'))
+        if nn_config["representation"]["load_path"]:
+            NNr.load_state_dict(torch.load(nn_config["representation"]["load"] +'.pth'))
         NNd = DynamicsNetwork()
-        if nn_config["dynamics"]["load"]:
-            NNd.load_state_dict(torch.load('NNd.pth'))
+        if nn_config["dynamics"]["load_path"]:
+            NNd.load_state_dict(torch.load(nn_config["dynamics"]["load"]+'.pth'))
         NNp = PredictionNetwork()
-        if nn_config["prediction"]["load"]:
-            NNp.load_state_dict(torch.load('NNp.pth'))
+        if nn_config["prediction"]["load_path"]:
+            NNp.load_state_dict(torch.load(nn_config["prediction"]["load"]+'.pth'))
 
         actions = config.get('set_of_actions')
         
         for episode_nr in range(config["train_config"]['number_of_episodes']):
+
+            #Makes a new game for each episode
             game = Snake(config.get('game_size'), head=config.get('head'))
             episode_data = []
             real_game_states = np.zeros((config["train_config"]['number_of_steps_in_episode']+1, config.get('game_size'), config.get('game_size')))
-            real_game_states[0] = game.get_real_nn_game_state() #TODO: Fix this, it is probably wrong
+            real_game_states[0] = game.board#TODO: Fix this, it is probably wrong
+
             for k in range(config["train_config"]['number_of_steps_in_episode']):
                 
+                #makes a new abstract state for each step
                 abstract_state = NNr.forward(real_game_states[k])
                 u_tree = U_tree(abstract_state, config["train_config"]["max_depth"], actions)
+                #Runs MCTS
                 for m in range(config["train_config"]['number_of_MTC_simulations']):
                     u_tree.MCTS(NNd, NNp)
+                #Gets the final policy for the step
                 final_policy_for_step = u_tree.normalize_visits() #higly suspect
+                #Saves episode data
                 root_value = u_tree.get_root_value()
                 next_action = u_tree.get_action(final_policy_for_step)
                 next_state, next_reward = game.simulate_game_step(real_game_states[k], next_action)
@@ -83,10 +90,21 @@ class Reinforcement_Learning_System:
                 if game.status == "game_over":
                     break
             self.episode_history.append(episode_data)
+            #does backpropagation
             if len(episode_data) % config['train_config']['batch_size'] == 0:
                 do_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) 
         
         return NNr, NNd, NNp
     
 system = Reinforcement_Learning_System()
-system.episode_loop()
+NNr, NNd, NNp = system.episode_loop()
+# Save the models
+torch.save(NNr.state_dict(), nn_config["representation"]["save"]+'.pth')
+if nn_config["representation"]["save_path"]:
+    NNr.load_state_dict(torch.save(NNr.state_dict(), nn_config["representation"]["save_path"] +'.pth'))
+
+if nn_config["dynamics"]["save_path"]:
+    NNd.load_state_dict(torch.save(NNd.state_dict(), nn_config["dynamics"]["save_path"]+'.pth'))
+
+if nn_config["prediction"]["save_path"]:
+    torch.save(NNp.state_dict(), nn_config["prediction"]["save_path"]+'.pth')
