@@ -9,7 +9,8 @@ class SnakeGUI:
         self.matrix_size = matrix_size
         self.cell_size = 60
         self.play_grid = (matrix_size*self.cell_size, matrix_size*self.cell_size)
-        self.color_map = {0:(255,255,255), 1: (0,255,0),2: (255,0,0)} 
+        self.color_map = {0: (255, 255, 255), 1: (0, 255, 0), -1: (255, 0, 0)}
+        self.color_map.update({i: (0, 255, 0) for i in range(2, 256)}) # <--- Cursed
         self.window_surface = pygame.display.set_mode(self.play_grid)
 
         self.manager = pygame_gui.UIManager(self.play_grid)
