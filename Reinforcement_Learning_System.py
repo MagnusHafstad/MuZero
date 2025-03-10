@@ -64,17 +64,24 @@ class Reinforcement_Learning_System:
         actions = config.get('set_of_actions')
         
         for episode_nr in range(config["train_config"]['number_of_episodes']):
+
+            #Makes a new game for each episode
             game = Snake(config.get('game_size'), head=config.get('head'))
             episode_data = []
             real_game_states = np.zeros((config["train_config"]['number_of_steps_in_episode']+1, config.get('game_size'), config.get('game_size')))
             real_game_states[0] = game.board#TODO: Fix this, it is probably wrong
+
             for k in range(config["train_config"]['number_of_steps_in_episode']):
                 
+                #makes a new abstract state for each step
                 abstract_state = NNr.forward(real_game_states[k])
                 u_tree = U_tree(abstract_state, config["train_config"]["max_depth"], actions)
+                #Runs MCTS
                 for m in range(config["train_config"]['number_of_MTC_simulations']):
                     u_tree.MCTS(NNd, NNp)
+                #Gets the final policy for the step
                 final_policy_for_step = u_tree.normalize_visits() #higly suspect
+                #Saves episode data
                 root_value = u_tree.get_root_value()
                 next_action = u_tree.get_action(final_policy_for_step)
                 next_state, next_reward = game.simulate_game_step(real_game_states[k], next_action)
@@ -83,6 +90,7 @@ class Reinforcement_Learning_System:
                 if game.status == "game_over":
                     break
             self.episode_history.append(episode_data)
+            #does backpropagation
             if len(episode_data) % config['train_config']['batch_size'] == 0:
                 do_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) 
         
