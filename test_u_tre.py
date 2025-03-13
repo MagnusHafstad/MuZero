@@ -37,13 +37,13 @@ def testTree():
     
     action_list = [0,1,2,3]
     MCT_game = snake_game.copy()
-    tree = U_tree(MCT_game.board, 50, action_list)
+    # tree = U_tree(MCT_game.board, 10, action_list)
 
     loopnr = 0
     while snake_game.status == "playing":
         MCT_game = snake_game.copy()
-        tree = U_tree(MCT_game.board, 1, action_list)
-        tree.print_tree(tree.root)
+        tree = U_tree(MCT_game.board, 20, action_list)
+        #tree.print_tree(tree.root)
         #print(snake_game.board)
         
         for i in tqdm.tqdm(range(500)):

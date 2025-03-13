@@ -34,11 +34,10 @@ class U_tree():
         """
         Use upper confidence bounds(UCB) as tree policy
         """
-        c = 1
+        c = 5
         visit_count = node.visit_count
         if node.visit_count == 0:
-            visit_count = 0.01
-
+            visit_count = 0.00001
         return node.reward + c * np.sqrt(np.log(node.parent.visit_count)/visit_count)
 
     
@@ -77,7 +76,8 @@ class U_tree():
     def print_tree(self, node, level=0):
         print(" " * (level * 4) + f"depth: {node.depth} Reward: {node.reward}, Visits: {node.visit_count}") #State: {node.state},
         for child in node.children:
-            self.print_tree(child, level + 1)      
+            self.print_tree(child, level + 1)
+  
 
     def MCTS(self, calc_next_state: Callable, get_policy:Callable):
         """
@@ -106,7 +106,7 @@ class U_tree():
         NOT DONE!!!
         """
         accum_reward = []
-        state = node.state
+        state = node.state.copy()
         for _ in range(depth):
             if node.status != "playing":
                 break
