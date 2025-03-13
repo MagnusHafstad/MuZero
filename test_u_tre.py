@@ -20,7 +20,10 @@ import torch
 #     NNp.load_state_dict(torch.load('NNp.pth'))
 
 
-
+# Set random seed for reproducibility
+seed = 42
+np.random.seed(seed)
+torch.manual_seed(seed)
 
 
 
@@ -37,16 +40,15 @@ def testTree():
     
     action_list = [0,1,2,3]
     MCT_game = snake_game.copy()
-    tree = U_tree(MCT_game.board, 50, action_list)
 
     loopnr = 0
     while snake_game.status == "playing":
         MCT_game = snake_game.copy()
-        tree = U_tree(MCT_game.board, 1, action_list)
-        tree.print_tree(tree.root)
+        tree = U_tree(MCT_game.board, 10, action_list)
+        #tree.print_tree(tree.root)
         #print(snake_game.board)
         
-        for i in tqdm.tqdm(range(500)):
+        for i in tqdm.tqdm(range(100)):
             tree.MCTS(MCT_game.get_next_state_and_reward, MCT_game.get_policy)
         #tree.print_tree(tree.root)
         snake_game.direction = tree.get_action(tree.normalize_visits())
