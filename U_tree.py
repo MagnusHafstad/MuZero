@@ -107,8 +107,9 @@ class U_tree():
         """
         accum_reward = []
         state = node.state.copy()
+        status = node.status
         for _ in range(depth):
-            if node.status != "playing":
+            if status != "playing":
                 break
             state_policy, state_value = get_policy(node)
             #state_policy = state_policy.detach().numpy()
