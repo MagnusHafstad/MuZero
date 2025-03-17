@@ -34,7 +34,7 @@ class U_tree():
         """
         Use upper confidence bounds(UCB) as tree policy
         """
-        c = 1
+        c = 0.5
         visit_count = node.visit_count
         if node.visit_count == 0:
             visit_count = 0.00001
@@ -116,15 +116,16 @@ class U_tree():
         """
         accum_reward = []
         state = node.state.copy()
-        status = node.status
+        
         for _ in range(depth):
-            if status != "playing":
+            if node.status != "playing":
                 break
             state_policy, state_value = get_policy(node)
             #state_policy = state_policy.detach().numpy()
             action = self.get_action(state_policy) 
-            state, reward, status = calc_next_state(state, [action])
 
+            state, reward, status = calc_next_state(state, [action])
+            node.status = status
             #state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
             #reward = int(reward.item())
             accum_reward.append(reward)
@@ -141,13 +142,11 @@ class U_tree():
         """
         node.visit_count += 1
         discount_rate = 1 # Hypotisi:_This is essentially how much of the reward we attribute to the any given move.
-        if isinstance(accum_rewards, float):
+        if not isinstance(accum_rewards, list):
             accum_rewards = [accum_rewards]
-        elif isinstance(accum_rewards, np.int64):
-            accum_rewards = [float(accum_rewards)]
         node.reward = sum(accum_rewards) * discount_rate
         if node != goal_node:
-            self.do_backpropagation(node.parent, goal_node, accum_rewards)
+            self.do_backpropagation(node.parent, goal_node, node.reward)
 
 
     def get_action(self, policy): 
