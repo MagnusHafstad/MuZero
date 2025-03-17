@@ -130,10 +130,10 @@ class Snake():
     def calculate_reward(self, status, len_snake) -> int:
         """based on a game state"""
         if status == "game_over":
-            return -10 + len_snake
+            return -10 + len_snake*10
         elif status == "Win":
-            return 10 + len_snake
-        return len_snake
+            return 10 + len_snake*10
+        return len_snake*10
 
     def get_board(self) -> np.array:
         return self.board

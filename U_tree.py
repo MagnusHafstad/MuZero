@@ -93,6 +93,10 @@ class U_tree():
         Do one full MC run through the tree
         """
         leaf_node = self.search_to_leaf()
+        if leaf_node.status != "playing":
+            leaf_node.visit_count = 1
+            leaf_node.reward = -999
+            return
         
         if len(leaf_node.children)!=0:
             raise ValueError("Leaf node should not have children")
@@ -101,7 +105,6 @@ class U_tree():
             new_state, reward, status  = calc_next_state(leaf_node.state, [action])
             #new_state = new_state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
             #reward = int(reward.item())
-            
             leaf_node.add_child(new_state,leaf_node,reward, status)
 
         child = random.choice(leaf_node.children)
@@ -154,6 +157,10 @@ class U_tree():
         Policy should be a normalized 1-d vector
         """
         action = np.random.choice(len(policy), p=policy)
+        return action
+    
+    def get_final_action(self, policy):
+        action = np.argmax(policy)
         return action
     
     def normalize_visits(self):

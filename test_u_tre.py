@@ -44,14 +44,14 @@ def testTree():
     loopnr = 0
     while snake_game.status == "playing":
         MCT_game = snake_game.copy()
-        tree = U_tree(MCT_game.board, 5, action_list)
+        tree = U_tree(MCT_game.board, 10, action_list)
         #tree.print_tree(tree.root)
         #print(snake_game.board)
         
         for i in tqdm.tqdm(range(100)):
             tree.MCTS(MCT_game.get_next_state_and_reward, MCT_game.get_policy)
         #tree.print_tree(tree.root, 3)
-        snake_game.direction = tree.get_action(tree.normalize_visits())
+        snake_game.direction = tree.get_final_action(tree.normalize_visits())
         snake_game.get_next_location()
         snake_game.set_next_state()
         print(snake_game.board, loopnr)
