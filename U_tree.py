@@ -34,7 +34,7 @@ class U_tree():
         """
         Use upper confidence bounds(UCB) as tree policy
         """
-        c = 5
+        c = 1
         visit_count = node.visit_count
         if node.visit_count == 0:
             visit_count = 0.00001
@@ -77,6 +77,15 @@ class U_tree():
         print(" " * (level * 4) + f"depth: {node.depth} Reward: {node.reward}, Visits: {node.visit_count}") #State: {node.state},
         for child in node.children:
             self.print_tree(child, level + 1)
+
+    def write_tree_to_file(self, node, file, level=0):
+        file.write(" " * (level * 4) + f"depth: {node.depth} Reward: {node.reward}, Visits: {node.visit_count}\n")
+        for child in node.children:
+            self.write_tree_to_file(child, file, level + 1)
+
+    def save_tree(self, filename="tree.txt"):
+        with open(filename, "w") as file:
+            self.write_tree_to_file(self.root, file)
   
 
     def MCTS(self, calc_next_state: Callable, get_policy:Callable):
@@ -131,17 +140,21 @@ class U_tree():
         updates the reward value of the nodes
         """
         node.visit_count += 1
-        node.reward = sum(accum_rewards)
-        accum_rewards.append(node.reward)
+        discount_rate = 1 # Hypotisi:_This is essentially how much of the reward we attribute to the any given move.
+        if isinstance(accum_rewards, float):
+            accum_rewards = [accum_rewards]
+        elif isinstance(accum_rewards, np.int64):
+            accum_rewards = [float(accum_rewards)]
+        node.reward = sum(accum_rewards) * discount_rate
         if node != goal_node:
-            self.do_backpropagation(node.parent, goal_node, accum_rewards) 
+            self.do_backpropagation(node.parent, goal_node, accum_rewards)
 
 
     def get_action(self, policy): 
         """
         Policy should be a normalized 1-d vector
         """
-        action = np.argmax(policy)#, p=policy) 
+        action = np.random.choice(len(policy), p=policy)
         return action
     
     def normalize_visits(self):
