@@ -148,7 +148,7 @@ class DynamicsNetwork(nn.Module):
         x = self.fc(x)
         next_state = x[:nn_config["abstract_state_dim"]]
         reward = x[nn_config["abstract_state_dim"]:]
-        return next_state, reward
+        return next_state.detatch.numpy(), int(reward.item()), "playing"
 
 class PredictionNetwork(nn.Module):
     """Prediction Network (NNp) - Outputs policy and value estimates from an abstract state."""
@@ -186,5 +186,5 @@ class PredictionNetwork(nn.Module):
         value = self.value_fc(x)
         value = self.value_activation(value)
         
-        return policy, value
+        return policy.detach().numpy(), value
 
