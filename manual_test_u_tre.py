@@ -20,10 +20,7 @@ import torch
 #     NNp.load_state_dict(torch.load('NNp.pth'))
 
 
-# Set random seed for reproducibility
-seed = 42
-np.random.seed(seed)
-torch.manual_seed(seed)
+
 
 
 
