@@ -93,7 +93,7 @@ class U_tree():
         Do one full MC run through the tree
         """
         leaf_node = self.search_to_leaf()
-        if leaf_node.status != "playing":
+        if leaf_node.status == "game_over":
             leaf_node.visit_count = 1
             leaf_node.reward = -999
             return
