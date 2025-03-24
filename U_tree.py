@@ -109,7 +109,7 @@ class U_tree():
 
         child = random.choice(leaf_node.children)
         accum_reward = self.do_rollout(child, self.d_max - child.depth, get_policy, calc_next_state)
-        self.do_backpropagation(child, self.root, accum_reward) 
+        self.do_backpropagation(child, sum(accum_reward)) 
 
     
     def do_rollout(self, node:Tree_node, depth, get_policy:Callable, calc_next_state:Callable) -> list[float]:
@@ -139,17 +139,16 @@ class U_tree():
         accum_reward.append(state_value)
         return accum_reward
 
-    def do_backpropagation(self, node, goal_node, accum_rewards: list):
+    def do_backpropagation(self, node, reward: float, discount_rate=1):
         """
         updates the reward value of the nodes
         """
-        node.visit_count += 1
-        discount_rate = 1 # Hypotisi:_This is essentially how much of the reward we attribute to the any given move.
-        if not isinstance(accum_rewards, list):
-            accum_rewards = [accum_rewards]
-        node.reward = sum(accum_rewards) * discount_rate
-        if node != goal_node:
-            self.do_backpropagation(node.parent, goal_node, node.reward)
+    
+        while node != None:
+            node.visit_count += 1
+            node.reward += reward 
+            reward = node.reward * discount_rate  
+            node = node.parent  
 
 
     def get_action(self, policy): 
