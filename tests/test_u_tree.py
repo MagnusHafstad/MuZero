@@ -10,7 +10,52 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from U_tree import *
 from Game import Snake
 
+def test_select_child_node():
+    game = Snake(5)
+    u_tree = U_tree(game.board, 10, [0,1,2,3])
+    u_tree.root.add_child(game.board, u_tree.root, 10, 1, "playing")
+    u_tree.root.add_child(game.board, u_tree.root, 0, 1, "dead")
+    u_tree.root.add_child(game.board, u_tree.root, 0, 1, "dead")
+    u_tree.root.add_child(game.board, u_tree.root, 0, 1, "dead")
 
+    assert u_tree.select_child_node(u_tree.root) == u_tree.root.children[0]
+
+    u_tree.root.children[0].visit_count = 10
+    u_tree.root.children[1].visit_count = 2
+    u_tree.root.children[2].visit_count = 1
+    u_tree.root.children[3].visit_count = 0
+
+    # Test that the node with the highest UCB is selected
+    assert u_tree.select_child_node(u_tree.root) == u_tree.root.children[0]
+
+    # Test that the node with the highest UCB is selected
+    u_tree.root.children[0].visit_count = 0
+    u_tree.root.children[1].visit_count = 0
+    u_tree.root.children[2].visit_count = 0
+    u_tree.root.children[3].visit_count = 0
+
+    assert u_tree.select_child_node(u_tree.root) == u_tree.root.children[0]
+
+    # Test that the node with the highest UCB is selected
+    u_tree.root.children[0].visit_count = 0
+    u_tree.root.children[1].visit_count = 0
+    u_tree.root.children[2].visit_count = 0
+    u_tree.root.children[3].visit_count = 1
+
+    assert u_tree.select_child_node(u_tree.root) == u_tree.root.children[3]
+
+    # Test that the node with the highest UCB is selected
+    u_tree.root.children[0].visit_count = 0
+    u_tree.root.children[1].visit_count = 0
+    u_tree.root.children[2].visit_count = 1
+    u_tree.root.children[3].visit_count = 0
+
+    assert u_tree.select_child_node(u_tree.root) == u_tree.root.children[2]
+
+def test_search_to_leaf():
+    game = Snake(5)
+    u_tree = U_tree(game.board, 10, [0,1,2,3])
+    u_tree.root.add_child(game.board, u_tree.root, 10, 1, "playing")    
 
 def test_add_child():
     game = Snake(5)
@@ -27,7 +72,6 @@ def test_add_child():
     assert u_tree.root.children[1].reward == 0 # dead
     assert u_tree.root.children[0].parent == u_tree.root
 
-    
 
 def test_do_backpropagation():
     game = Snake(5)
