@@ -40,13 +40,10 @@ class Snake():
         """
         Returns a deep copy of the current game state
         """
-        new_snake = Snake(len(self.board), self.head)
+        new_snake = Snake(len(self.board), False)
         new_snake.board = np.copy(self.board)
         new_snake.direction = self.direction
         new_snake.status = self.status
-        if self.head:
-            new_snake.gui = self.gui
-            new_snake.clock = self.clock
         return new_snake
     
     def place_food(self) -> None:

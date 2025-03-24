@@ -28,24 +28,15 @@ def testTree():
     #Generate tree:
     snake_game = Game.Snake(5)
 
-    # snake_game.board = np.array([[0,0,0,0,0],
-    #                              [0,0,0,0,0],
-    #                              [1,0,2,0,0],
-    #                              [0,0,0,0,0],
-    #                              [0,0,0,0,0]])
-    # snake_game.snake = snake_game.snake = [(2,0), (1,0), (1,1), (1,2)]
-    
     action_list = [0,1,2,3]
-    MCT_game = snake_game.copy()
-
     loopnr = 0
     while snake_game.status == "playing":
-        MCT_game = snake_game.copy()
-        tree = U_tree(MCT_game.board, 10, action_list)
+        MCT_game = snake_game.copy() 
+        tree = U_tree(MCT_game.board, 30, action_list)
         #tree.print_tree(tree.root)
         #print(snake_game.board)
         
-        for i in tqdm.tqdm(range(100)):
+        for i in tqdm.tqdm(range(300)):
             tree.MCTS(MCT_game.get_next_state_and_reward, MCT_game.get_policy)
         #tree.print_tree(tree.root, 3)
         snake_game.direction = tree.get_final_action(tree.normalize_visits())
