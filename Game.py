@@ -23,13 +23,14 @@ def get_game():
 
 class Snake():
     def __init__(self, size, head=True):
-        # 0 is empty, 1 is snake, 2 is food
+        # 0 is empty, 1, 2, 3 etc. is snake, -1 is food
         food = -1
-        snake = 1
+        snake = [2, 1]
         self.board = np.zeros((size, size), dtype=int)
         self.direction = 0 #right (see get next location)
-        self.board[len(self.board)//2, 0] = snake
-        self.board[(len(self.board)//2,len(self.board)//2)] = food  
+        self.board[len(self.board)//2, 1] = snake[0]
+        self.board[len(self.board)//2, 0] = snake[1]
+        self.board[(len(self.board)//2,len(self.board)-1)] = food  
         self.status = "playing"
         self.head = head
         if self.head:
