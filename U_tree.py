@@ -130,7 +130,10 @@ class U_tree():
         for _ in range(depth):
             if status != "playing":
                 break
-            state_policy, state_value = get_policy(node)
+            if config["use_NN"]:
+                state_policy, state_value = get_policy(state)
+            else:
+                state_policy, state_value = get_policy(node)
             #state_policy = state_policy.detach().numpy()
             action = self.get_action(state_policy) 
 
@@ -139,10 +142,12 @@ class U_tree():
             #state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
             #reward = int(reward.item())
             accum_reward.append(reward)
+        if config["use_NN"]:
+            state_policy, state_value = get_policy(state)
+        else:
+            state_policy, state_value = get_policy(node)
 
-        state_policy, state_value = get_policy(node)
-
-        state_value = state_value.item()
+        #state_value = state_value.item()
         accum_reward.append(state_value)
         return accum_reward
 

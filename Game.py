@@ -23,18 +23,21 @@ def get_game():
 
 class Snake():
     def __init__(self, size, head=True):
-        # 0 is empty, 1 is snake, 2 is food
+        # 0 is empty, 1, 2, 3 etc. is snake, -1 is food
         food = -1
-        snake = 1
+        snake = [2, 1]
         self.board = np.zeros((size, size), dtype=int)
         self.direction = 0 #right (see get next location)
-        self.board[len(self.board)//2, 0] = snake
-        self.board[(len(self.board)//2,len(self.board)//2)] = food  
+        self.board[len(self.board)//2, 1] = snake[0]
+        self.board[len(self.board)//2, 0] = snake[1]
+        self.board[(len(self.board)//2,len(self.board)-1)] = food  
         self.status = "playing"
         self.head = head
         if self.head:
             self.gui = snake_gui.SnakeGUI(size)
             self.clock = pygame.time.Clock()
+
+        self.ate_food = 0
 
     def copy(self):
         """
@@ -94,9 +97,11 @@ class Snake():
         if self.board[next_location[0], next_location[1]] == -1:
             self.board[next_location[0], next_location[1]] = snake_head +1
             self.place_food()
+            self.ate_food = 1
         elif self.board[next_location[0], next_location[1]] == 0:
             self.board[next_location[0], next_location[1]] = snake_head +1
             self.board[self.board > 0] -= 1
+            self.ate_food = 0
         
     def set_next_state(self) -> None:
         """
@@ -117,21 +122,21 @@ class Snake():
         temp_game.board = np.copy(state)
         temp_game.direction = action[0]
         temp_game.set_next_state()
-        return temp_game.board, temp_game.calculate_reward(temp_game.status, np.max(temp_game.board)), temp_game.status
+        return temp_game.board, temp_game.calculate_reward(temp_game.status), temp_game.status
     
     def get_policy(self, node):
         policy = [0.25,0.25,0.25,0.25]
-        state_value = self.calculate_reward(node.status, np.max(self.board))
+        state_value = self.calculate_reward(node.status)
         return policy, state_value
         
 
-    def calculate_reward(self, status, len_snake) -> int:
+    def calculate_reward(self, status) -> int:
         """based on a game state"""
         if status == "game_over":
-            return -10 + len_snake*10
-        elif status == "Win":
-            return 10 + len_snake*10
-        return len_snake*10
+            return -1
+        else:
+            return self.ate_food*10 + 0.001
+
 
     def get_board(self) -> np.array:
         return self.board
@@ -171,7 +176,7 @@ class Snake():
         if config.get('head'):
             self.gui.update_gui(self.board)
         
-        return self.board, self.calculate_reward(self.status, np.max(self.board))
+        return self.board, self.calculate_reward(self.status)
     
     def get_score(self):
         snake_length = np.max(self.board)
