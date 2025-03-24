@@ -13,6 +13,7 @@ def load_config(file_path: str) -> dict:
 config = load_config('./config.yaml')
 
 
+
 def get_game():
     match config.get('game'):
         case "snake":
@@ -175,5 +176,7 @@ class Snake():
         
         return self.board, self.calculate_reward(self.status, np.max(self.board))
     
-
+    def get_score(self):
+        snake_length = np.max(self.board)
+        return snake_length
     

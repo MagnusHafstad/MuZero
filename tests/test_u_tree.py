@@ -100,7 +100,47 @@ def test_do_backpropagation():
     assert np.isclose(u_tree.root.children[0].reward, 10 + 20 * 0.9**1)
     assert np.isclose(u_tree.root.reward, 10 * 0.9 + 20 * 0.9**2)
     
+def test_do_rollout():
+    #MCT_game.get_next_state_and_reward, MCT_game.get_policy
+    game = Snake(5)
+    np.random.seed(42)
+    u_tree = U_tree(game.board, 10, [0,1,2,3])
+    
+    for action in u_tree.actions:
+        game = Snake(5)
+        new_state, reward =game.simulate_game_step( game.board ,action )
+        u_tree.root.add_child(new_state, u_tree.root,reward, game.status)
+
+    # Valitdity of test: 
+    assert len(u_tree.root.children) == 4
+
+    # Test of do rollout
+    accum_reward = u_tree.do_rollout(u_tree.root.children[0], 2, game.get_policy, game.get_next_state_and_reward)
+    
+    assert len(accum_reward) == 3
     
 
+def test_do_rollout_early_stop():
+    bad_situation = np.array([[4, 3, 0, 0, 0],
+                              [1, 2, 0, 0, 0],
+                              [0, 0, -1, 0, 0],
+                              [0, 0, 0, 0, 0],
+                              [0, 0, 0, 0, 0]])
+    game = Snake(5)
+    game.board = bad_situation.copy()
+    
+    np.random.seed(42)
+    u_tree = U_tree(game.board, 10, [0,1,2,3])
+    
+    for action in u_tree.actions:
+        game = Snake(5)
+        game.board = bad_situation.copy()
+        new_state, reward =game.simulate_game_step( game.board ,action)
+        u_tree.root.add_child(new_state, u_tree.root,reward, game.status)
+    accum_reward = u_tree.do_rollout(u_tree.root.children[0], 2, game.get_policy, game.get_next_state_and_reward)
+    
+    assert len(accum_reward) == 1
+    assert sum(accum_reward) == 30
 
-test_do_backpropagation()
+
+test_do_rollout_early_stop()

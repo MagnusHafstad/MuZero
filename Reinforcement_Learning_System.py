@@ -4,6 +4,8 @@ from Game import Snake
 from U_tree import U_tree
 import numpy as np
 from neural_network_manager import *
+from typing import Callable
+import matplotlib.pyplot as plt
 
 
 def load_config(file_path: str) -> dict:
@@ -15,9 +17,49 @@ config = load_config('./config.yaml')
 nn_config = load_config('./nn_config.yaml')
 
 class Reinforcement_Learning_System:
-    def __init__(self):
+    def __init__(self, game:Callable):
         self.episode_history = []
+        self.game = game
         pass
+
+    def get_episode_history(self):
+        return self.episode_history
+    
+    def init_new_game(self):
+        game = self.game(config.get('game_size'), head=config.get('head')) ### Her er vi avhengig av hvilket spill det er. Ikke GENERELL KODE!
+        return game
+    
+    def plot_metrics(self):
+            
+        state = []
+        actions = []
+        policies = []
+        values = []
+        rewards = []
+        score = []
+        survival= []
+
+        for ep in self.episode_history:
+            survival.append(len(ep))
+            score.append(ep[-1][-1])
+            # state.append(ep[0])
+            # values.append(ep[1])
+            # policies.append(ep[2])
+            # actions.append(ep[3])
+            # rewards.append(ep[4])
+            # score.append(ep[5])
+
+        X = np.linspace(1,len(self.episode_history), len(self.episode_history))
+        print(X)
+        print(score)
+        #print(score)
+        plt.plot(X, survival, label ="survival")
+        plt.plot(X, score, label ="length")
+        for i in range(10, len(X), 10):
+            plt.axvline(x = i, ymin = 0.5, ymax = 1,  color = 'b')
+        plt.xlabel("Episodes")
+        plt.legend()
+        plt.show()
 
     def generate_real_game_states(self, episode_nr) -> list[tuple]:
         """
@@ -66,13 +108,12 @@ class Reinforcement_Learning_System:
         for episode_nr in range(config["train_config"]['number_of_episodes']):
 
             #Makes a new game for each episode
-            game = Snake(config.get('game_size'), head=config.get('head'))
+            game = self.init_new_game()  #Snake(config.get('game_size'), head=config.get('head')) <-- old code in case it don't work
             episode_data = []
             real_game_states = np.zeros((config["train_config"]['number_of_steps_in_episode']+1, config.get('game_size'), config.get('game_size')))
             real_game_states[0] = game.board#TODO: Fix this, it is probably wrong
 
             for k in range(config["train_config"]['number_of_steps_in_episode']):
-                
                 #makes a new abstract state for each step
                 abstract_state = NNr.forward(real_game_states[k])
                 u_tree = U_tree(abstract_state, config["train_config"]["max_depth"], actions)
@@ -86,7 +127,7 @@ class Reinforcement_Learning_System:
                 next_action = u_tree.get_action(final_policy_for_step)
                 next_state, next_reward = game.simulate_game_step(real_game_states[k], next_action)
                 real_game_states[k+1]= next_state
-                episode_data.append([real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward])
+                episode_data.append([real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward, game.get_score()])
                 if game.status == "game_over":
                     break
             self.episode_history.append(episode_data)
@@ -96,15 +137,18 @@ class Reinforcement_Learning_System:
         
         return NNr, NNd, NNp
     
-system = Reinforcement_Learning_System()
+system = Reinforcement_Learning_System(Snake)
+
+
 NNr, NNd, NNp = system.episode_loop()
+system.plot_metrics()
 # Save the models
-torch.save(NNr.state_dict(), nn_config["representation"]["save"]+'.pth')
-if nn_config["representation"]["save_path"]:
-    NNr.load_state_dict(torch.save(NNr.state_dict(), nn_config["representation"]["save_path"] +'.pth'))
+# torch.save(NNr.state_dict(), nn_config["representation"]["save_path"]+'.pth')
+# if nn_config["representation"]["save_path"]:
+#     NNr.load_state_dict(torch.save(NNr.state_dict(), nn_config["representation"]["save_path"] +'.pth'))
 
-if nn_config["dynamics"]["save_path"]:
-    NNd.load_state_dict(torch.save(NNd.state_dict(), nn_config["dynamics"]["save_path"]+'.pth'))
+# if nn_config["dynamics"]["save_path"]:
+#     NNd.load_state_dict(torch.save(NNd.state_dict(), nn_config["dynamics"]["save_path"]+'.pth'))
 
-if nn_config["prediction"]["save_path"]:
-    torch.save(NNp.state_dict(), nn_config["prediction"]["save_path"]+'.pth')
+# if nn_config["prediction"]["save_path"]:
+#     torch.save(NNp.state_dict(), nn_config["prediction"]["save_path"]+'.pth')
