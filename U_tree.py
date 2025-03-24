@@ -86,7 +86,7 @@ class U_tree():
             self.print_tree(child, level + 1)
 
     def write_tree_to_file(self, node, file, level=0):
-        file.write(" " * (level * 4) + f"depth: {node.depth} Reward: {node.reward}, Visits: {node.visit_count}\n")
+        file.write(" " * (level * 4) + f"depth: {node.depth} Reward: {node.reward}, Visits: {node.visit_count}, State:  {node.state}, status: {node.status}  \n")
         for child in node.children:
             self.write_tree_to_file(child, file, level + 1)
 
@@ -126,16 +126,16 @@ class U_tree():
         """
         accum_reward = []
         state = node.state.copy()
-        
+        status = node.status
         for _ in range(depth):
-            if node.status != "playing":
+            if status != "playing":
                 break
             state_policy, state_value = get_policy(node)
             #state_policy = state_policy.detach().numpy()
             action = self.get_action(state_policy) 
 
             state, reward, status = calc_next_state(state, [action])
-            node.status = status
+            
             #state = state.detach().numpy() # OBS i tilfelle vi ikke får gradienter, sjekk denne!
             #reward = int(reward.item())
             accum_reward.append(reward)

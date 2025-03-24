@@ -143,4 +143,3 @@ def test_do_rollout_early_stop():
     assert sum(accum_reward) == 30
 
 
-test_do_rollout_early_stop()
