@@ -56,9 +56,10 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
     
         abstract_state = NNr(state)
         print("abstract_state", abstract_state)
-        next_abstract_state, predicted_reward = NNd(abstract_state, actions)
+        next_abstract_state, predicted_reward, __ = NNd(abstract_state, actions)
         predicted_policies, predicted_values = NNp(next_abstract_state)
-
+        predicted_reward = torch.tensor(predicted_reward, dtype=torch.float32)
+        predicted_policies =torch.tensor(predicted_policies,dtype=torch.float32)
         predictions = [predicted_policies, predicted_values, predicted_reward]
         true = [policies, values, rewards]
 
@@ -66,8 +67,8 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
 
         optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
         optimizerR.zero_grad()
-        lossR = loss_fn(predicted_values, values)
-        lossR.backward(retain_graph=True)
+        lossR = loss_fn(torch.tensor(predicted_values,dtype=torch.float32), values)
+        #lossR.backward(retain_graph=True)
         torch.nn.utils.clip_grad_norm_(NNr.parameters(), 3)
         optimizerR.step()
         print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
@@ -75,7 +76,7 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
         optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
         optimizerD.zero_grad()
         lossD = loss_fn(predicted_reward, rewards)
-        lossD.backward(retain_graph=True)
+        #lossD.backward(retain_graph=True)
         optimizerD.step()
         torch.nn.utils.clip_grad_norm_(NNd.parameters(), 3)
         print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
@@ -83,7 +84,7 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
         optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.05)
         optimizerP.zero_grad()
         lossP = loss_fn(predicted_policies, policies)
-        lossP.backward()
+        #lossP.backward()
         print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
         torch.nn.utils.clip_grad_norm_(NNp.parameters(), 3)
         optimizerP.step()
@@ -148,7 +149,7 @@ class DynamicsNetwork(nn.Module):
         x = self.fc(x)
         next_state = x[:nn_config["abstract_state_dim"]]
         reward = x[nn_config["abstract_state_dim"]:]
-        return next_state.detatch.numpy(), int(reward.item()), "playing"
+        return next_state.detach().numpy(), int(reward.item()), "playing"
 
 class PredictionNetwork(nn.Module):
     """Prediction Network (NNp) - Outputs policy and value estimates from an abstract state."""
