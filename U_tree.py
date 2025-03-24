@@ -147,7 +147,7 @@ class U_tree():
         else:
             state_policy, state_value = get_policy(node)
 
-        state_value = state_value.item()
+        #state_value = state_value.item()
         accum_reward.append(state_value)
         return accum_reward
 
