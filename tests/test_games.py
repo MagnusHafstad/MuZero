@@ -21,4 +21,20 @@ def test_setup_game():
 
 
 
-   
+def test_simulate_game_step():
+    board = np.array([[ 0,  0,  0, -1,  0],
+                      [ 0,  0,  0,  0,  0],
+                      [ 0,  0,  0,  0,  0],
+                      [ 2,  1,  0,  0,  0],
+                      [ 3,  0,  0,  0,  0]])
+    game = Snake(5)
+    game.board = board.copy()
+
+    new_board, reward = game.simulate_game_step(board,0)
+
+    assert np.array_equal(new_board, [[ 0,  0,  0, -1,  0],
+                                      [ 0,  0,  0,  0,  0],
+                                      [ 0,  0,  0,  0,  0],
+                                      [ 1,  0,  0,  0,  0],
+                                      [ 2,  3,  0,  0,  0]])
+    assert reward == 30
