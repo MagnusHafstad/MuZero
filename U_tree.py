@@ -2,7 +2,14 @@ import numpy as np
 import random
 import torch
 from typing import Callable
+import yaml
 
+def load_config(config_path="config.yaml"):
+    with open(config_path, "r") as file:
+        config = yaml.safe_load(file)
+    return config
+
+config = load_config()
 
 class Tree_node():
     def __init__(self, state, parent, reward, depth, status):
@@ -34,7 +41,7 @@ class U_tree():
         """
         Use upper confidence bounds(UCB) as tree policy
         """
-        c = 0.5
+        c = config["exploration_rate"]
         visit_count = node.visit_count
         if node.visit_count == 0:
             visit_count = 0.00001
@@ -95,7 +102,7 @@ class U_tree():
         leaf_node = self.search_to_leaf()
         if leaf_node.status == "game_over":
             leaf_node.visit_count = 1
-            leaf_node.reward = -999
+            leaf_node.reward = config["game_over_reward"]
             return
         
         if len(leaf_node.children)!=0:

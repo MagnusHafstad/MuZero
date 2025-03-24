@@ -8,3 +8,5 @@ game: snake
 game_size: 5
 set_of_actions: [0, 1, 2, 3] # Right, left, up, down
 head: False
+game_over_reward: -999
+exploration_rate: 0.5
