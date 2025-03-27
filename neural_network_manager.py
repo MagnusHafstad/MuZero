@@ -96,6 +96,105 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
 
     return NNr, NNd, NNp
 
+
+def get_random_instance_with_idx(list:list):
+    i = random.choice(range(len(list)))
+    return list[i], i
+
+def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward
+    look_ahead = 1
+    look_back = 1
+    
+    episode, episode_idx = get_random_instance_with_idx(episode_history)
+    count = 0
+    while len(episode) <= 1:
+        episode = random.choice(episode_history)
+        count += 1
+        if count == 10:
+            print("I give up, I deserve nothing but death")
+
+    step, step_idx = get_random_instance_with_idx(episode)
+
+
+    if step_idx <= look_back:
+            look_back = step_idx
+    if len(episode) - step_idx <= look_ahead:
+        look_ahead = len(episode) - step_idx - 1
+    step_array = episode[step_idx - look_back : step_idx + look_ahead + 1]
+
+    state = []
+    actions = []
+    policies = []
+    values = []
+    rewards = []
+    for step in step_array:
+        state.append(step[0].flatten())
+        values.append(step[1])
+        policies.append(step[2])
+        actions.append(step[3])
+        rewards.append(step[4])
+        
+   
+    # next_abstract_state =[]
+    # predicted_reward = []
+    # predicted_values = []
+    # predicted_policies = []
+
+
+
+    # Predicted PVR
+    abstract_state = NNr(state)
+    next_abstract_state, predicted_reward, __ = NNd(abstract_state, actions)
+    predicted_policies, predicted_values = NNp(next_abstract_state)
+    
+
+    # predicted_reward = torch.tensor(predicted_reward, dtype=torch.float32)
+    # predicted_policies =torch.tensor(predicted_policies,dtype=torch.float32)
+    # predicted_values =torch.tensor(predicted_values,dtype=torch.float32)
+
+    rewards = torch.tensor(rewards, dtype=torch.float32)
+    policies =torch.tensor(policies,dtype=torch.float32)
+    
+    # values = [t.unsqueeze(0) for t in values]
+    # values = torch.cat(values)
+    values =torch.tensor(values,dtype=torch.float32)
+
+    predictions = [predicted_policies, predicted_values, predicted_reward]
+    true = [policies, values, rewards]
+
+    loss_fn = nn.MSELoss()
+
+    optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
+    optimizerR.zero_grad()
+    lossR = loss_fn(predicted_values, values)
+    lossR.backward(retain_graph=True)
+    torch.nn.utils.clip_grad_norm_(NNr.parameters(), 3)
+    optimizerR.step()
+    print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
+
+    optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
+    optimizerD.zero_grad()
+    lossD = loss_fn(predicted_reward, rewards)
+    lossD.backward(retain_graph=True)
+    optimizerD.step()
+    torch.nn.utils.clip_grad_norm_(NNd.parameters(), 3)
+    print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
+
+    optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.05)
+    optimizerP.zero_grad()
+    lossP = loss_fn(predicted_policies, policies)
+    lossP.backward()
+    print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
+    torch.nn.utils.clip_grad_norm_(NNp.parameters(), 3)
+    optimizerP.step()
+        
+    print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
+   
+   
+    return NNr, NNd, NNp
+    
+
+
 class RepresentationNetwork(nn.Module):
     """Representation Network (NNr) - Maps raw observations to abstract state representations."""
     def __init__(self, input_dim=config["game_size"]**2, layers=nn_config["representation"]["layers"], output_dim=nn_config["abstract_state_dim"], output_layer=nn_config["representation"]["output_layer"]):
@@ -115,7 +214,7 @@ class RepresentationNetwork(nn.Module):
     def forward(self, state): 
         # Ensure state tensor has a batch dimension
         state=torch.tensor(state, dtype=torch.float32)
-        state=state.view(-1)
+        #state=state.view(-1)
         if state.dim() == 1:
             state = state.unsqueeze(0)  # Add batch dimension
         return self.fc(state)
@@ -140,16 +239,22 @@ class DynamicsNetwork(nn.Module):
     def forward(self, abstract_state, action):
         # Ensure state and action tensors have a batch dimension
         abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
-        abstract_state=abstract_state.view(-1)
+        
+        #abstract_state=abstract_state.view(-1)
         action=torch.tensor(action, dtype=torch.float32)
-        action=action.view(-1)
+        
+        action = action.unsqueeze(1)
+
+        #action=action.view(-1)
         
 
         x = torch.cat([abstract_state, action], dim=-1)  # Concatenate state and action
         x = self.fc(x)
-        next_state = x[:nn_config["abstract_state_dim"]]
-        reward = x[nn_config["abstract_state_dim"]:]
-        return next_state.detach().numpy(), int(reward.item()), "playing"
+  
+        next_state = x[:,:nn_config["abstract_state_dim"]]
+        reward = x[:,nn_config["abstract_state_dim"]:]
+        
+        return next_state, reward, "playing"
 
 class PredictionNetwork(nn.Module):
     """Prediction Network (NNp) - Outputs policy and value estimates from an abstract state."""
@@ -187,5 +292,5 @@ class PredictionNetwork(nn.Module):
         value = self.value_fc(x)
         value = self.value_activation(value)
         
-        return policy.detach().numpy(), value
+        return policy, value
 

@@ -125,16 +125,22 @@ class U_tree():
         NOT DONE!!!
         """
         accum_reward = []
-        state = node.state.copy()
-        status = node.status
+        if config["use_NN"]:
+            state = node.state.clone()
+        else:
+            state = node.state.copy()
+        status = "playing"
+        if not config["use_NN"]:
+            status = node.status
         for _ in range(depth):
             if status != "playing":
                 break
             if config["use_NN"]:
                 state_policy, state_value = get_policy(state)
+                state_policy = state_policy.detach().numpy()[0]
             else:
                 state_policy, state_value = get_policy(node)
-            #state_policy = state_policy.detach().numpy()
+
             action = self.get_action(state_policy) 
 
             state, reward, status = calc_next_state(state, [action])
@@ -144,6 +150,7 @@ class U_tree():
             accum_reward.append(reward)
         if config["use_NN"]:
             state_policy, state_value = get_policy(state)
+            state_policy = state_policy.detach().numpy()[0]
         else:
             state_policy, state_value = get_policy(node)
 
@@ -167,6 +174,7 @@ class U_tree():
         """
         Policy should be a normalized 1-d vector
         """
+        #policy = policy.detach().numpy()[0]
         action = np.random.choice(len(policy), p=policy)
         return action
     

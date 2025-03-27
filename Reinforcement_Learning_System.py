@@ -50,13 +50,10 @@ class Reinforcement_Learning_System:
             # score.append(ep[5])
 
         X = np.linspace(1,len(self.episode_history), len(self.episode_history))
-        print(X)
-        print(score)
-        #print(score)
         plt.plot(X, survival, label ="survival")
         plt.plot(X, score, label ="length")
-        for i in range(10, len(X), 10):
-            plt.axvline(x = i, ymin = 0.5, ymax = 1,  color = 'b')
+        for i in range(config["train_config"]["batch_size"], len(X), config["train_config"]["batch_size"]):
+            plt.axvline(x = i, ymin = 0.7, ymax = 1,  color = 'b')
         plt.xlabel("Episodes")
         plt.legend()
         plt.show()
@@ -115,7 +112,7 @@ class Reinforcement_Learning_System:
 
             for k in range(config["train_config"]['number_of_steps_in_episode']):
                 #makes a new abstract state for each step
-                abstract_state = NNr.forward(real_game_states[k])
+                abstract_state = NNr.forward(real_game_states[k].flatten())
                 u_tree = U_tree(abstract_state, config["train_config"]["max_depth"], actions)
                 #Runs MCTS
                 for m in range(config["train_config"]['number_of_MTC_simulations']):
@@ -126,14 +123,15 @@ class Reinforcement_Learning_System:
                 root_value = u_tree.get_root_value()
                 next_action = u_tree.get_action(final_policy_for_step)
                 next_state, next_reward = game.simulate_game_step(real_game_states[k], next_action)
+                #next_state = next_state.detach().numpy()
                 real_game_states[k+1]= next_state
                 episode_data.append([real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward, game.get_score()])
                 if game.status == "game_over":
                     break
             self.episode_history.append(episode_data)
             #does backpropagation
-            if len(episode_data) % config['train_config']['batch_size'] == 0:
-                do_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) 
+            if len(self.episode_history) % config['train_config']['batch_size'] == 0:
+                second_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) ###########OBS!!!!!!!!!!!!!!
         
         return NNr, NNd, NNp
     
