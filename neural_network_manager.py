@@ -170,6 +170,9 @@ def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real
     lossR.backward(retain_graph=True)
     torch.nn.utils.clip_grad_norm_(NNr.parameters(), 3)
     optimizerR.step()
+    print("her:")
+    print(values)
+    print(predicted_values)
     print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
 
     optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
@@ -189,6 +192,10 @@ def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real
     optimizerP.step()
         
     print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
+
+    NNr.loss.append(lossR.item())
+    NNd.loss.append(lossD.item())
+    NNp.loss.append(lossP.item())
    
    
     return NNr, NNd, NNp
@@ -201,6 +208,7 @@ class RepresentationNetwork(nn.Module):
         super().__init__()
         layers_list = []
         prev_dim = input_dim
+        self.loss = []
         
         for hidden_dim in layers:
             layers_list.append(nn.Linear(prev_dim, hidden_dim["dim"]))
@@ -226,6 +234,7 @@ class DynamicsNetwork(nn.Module):
         layers_list = []
         self.abstract_state_dim = abstract_state_dim
         prev_dim = action_dim + abstract_state_dim
+        self.loss = []
 
         for hidden_dim in layers:
             layers_list.append(nn.Linear(prev_dim, hidden_dim["dim"]))
@@ -264,6 +273,7 @@ class PredictionNetwork(nn.Module):
         # Shared layers
         layers_list = []
         prev_dim = abstract_state_dim
+        self.loss = []
         
         for hidden_dim in layers:
             layers_list.append(nn.Linear(prev_dim, hidden_dim["dim"]))

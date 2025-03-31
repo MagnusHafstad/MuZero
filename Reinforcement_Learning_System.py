@@ -51,11 +51,21 @@ class Reinforcement_Learning_System:
 
         X = np.linspace(1,len(self.episode_history), len(self.episode_history))
         plt.plot(X, survival, label ="survival")
-        plt.plot(X, score, label ="length")
+        plt.plot(X, np.array(score)-2, label ="fruit eaten")
         for i in range(config["train_config"]["batch_size"], len(X), config["train_config"]["batch_size"]):
             plt.axvline(x = i, ymin = 0.7, ymax = 1,  color = 'b')
         plt.xlabel("Episodes")
         plt.legend()
+        plt.show()
+
+    def plot_loss(self, NNr,NNd,NNp):
+        X = np.linspace(1,len(NNr.loss), len(NNr.loss))
+        plt.plot(X, NNr.loss, label = "NNr")
+        plt.plot(X, NNd.loss, label = "NNd")
+        plt.plot(X, NNp.loss, label = "NNp")
+        plt.legend()
+        plt.xlabel("Training session")
+        plt.ylabel("Loss")
         plt.show()
 
     def generate_real_game_states(self, episode_nr) -> list[tuple]:
@@ -140,6 +150,10 @@ system = Reinforcement_Learning_System(Snake)
 
 NNr, NNd, NNp = system.episode_loop()
 system.plot_metrics()
+system.plot_loss(NNr, NNd, NNp)
+
+
+
 # Save the models
 # torch.save(NNr.state_dict(), nn_config["representation"]["save_path"]+'.pth')
 # if nn_config["representation"]["save_path"]:
