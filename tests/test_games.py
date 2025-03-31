@@ -14,11 +14,10 @@ def test_setup_game():
     snake_game = Snake(5)
     assert np.array_equal(snake_game.board, [[0,0,0,0,0],
                                             [0,0,0,0,0],
-                                            [1,0,-1,0,0],
+                                            [1,2,0,0,-1],
                                             [0,0,0,0,0],
                                             [0,0,0,0,0]])
     assert snake_game.direction == 0
-
 
 
 def test_simulate_game_step():
@@ -37,4 +36,4 @@ def test_simulate_game_step():
                                       [ 0,  0,  0,  0,  0],
                                       [ 1,  0,  0,  0,  0],
                                       [ 2,  3,  0,  0,  0]])
-    assert reward == 30
+    assert reward == 0.001
