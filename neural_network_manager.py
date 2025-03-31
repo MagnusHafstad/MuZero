@@ -213,7 +213,7 @@ class RepresentationNetwork(nn.Module):
     
     def forward(self, state): 
         # Ensure state tensor has a batch dimension
-        state=torch.tensor(state, dtype=torch.float32)
+        state=torch.as_tensor(state, dtype=torch.float32)
         #state=state.view(-1)
         if state.dim() == 1:
             state = state.unsqueeze(0)  # Add batch dimension
@@ -238,10 +238,10 @@ class DynamicsNetwork(nn.Module):
     
     def forward(self, abstract_state, action):
         # Ensure state and action tensors have a batch dimension
-        abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
+        abstract_state=torch.as_tensor(abstract_state, dtype=torch.float32)
         
         #abstract_state=abstract_state.view(-1)
-        action=torch.tensor(action, dtype=torch.float32)
+        action=torch.as_tensor(action, dtype=torch.float32)
         
         action = action.unsqueeze(1)
 
@@ -281,7 +281,7 @@ class PredictionNetwork(nn.Module):
         self.value_activation = pick_activation_func(reward_output_layer)
     
     def forward(self, abstract_state):
-        abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
+        abstract_state=torch.as_tensor(abstract_state, dtype=torch.float32)
         x = self.shared_fc(abstract_state)
         
         # Policy output
