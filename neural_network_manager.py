@@ -23,7 +23,7 @@ def pick_activation_func(name):
     elif name == "linear":
         return nn.Identity()
     elif name == "softmax":
-        return nn.Softmax()
+        return nn.Softmax(dim=1)
     else:
         raise ValueError("Invalid activation function name.")
 
