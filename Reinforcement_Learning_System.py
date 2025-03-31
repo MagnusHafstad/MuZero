@@ -50,7 +50,7 @@ class Reinforcement_Learning_System:
             # score.append(ep[5])
 
         X = np.linspace(1,len(self.episode_history), len(self.episode_history))
-        plt.plot(X, survival, label ="survival")
+        plt.plot(X, survival, label ="survival") #kan kanskje være en ide å se på et gjennomsnitt
         plt.plot(X, np.array(score)-2, label ="fruit eaten")
         for i in range(config["train_config"]["batch_size"], len(X), config["train_config"]["batch_size"]):
             plt.axvline(x = i, ymin = 0.7, ymax = 1,  color = 'b')
@@ -59,8 +59,8 @@ class Reinforcement_Learning_System:
         plt.show()
 
     def plot_loss(self, NNr,NNd,NNp):
-        X = np.linspace(1,len(NNr.loss), len(NNr.loss))
-        plt.plot(X, NNr.loss, label = "NNr")
+        X = np.linspace(1,len(NNr.loss), len(NNr.loss)) 
+        #plt.plot(X, NNr.loss, label = "NNr")
         plt.plot(X, NNd.loss, label = "NNd")
         plt.plot(X, NNp.loss, label = "NNp")
         plt.legend()
@@ -141,7 +141,7 @@ class Reinforcement_Learning_System:
             self.episode_history.append(episode_data)
             #does backpropagation
             if len(self.episode_history) % config['train_config']['batch_size'] == 0:
-                second_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) ###########OBS!!!!!!!!!!!!!!
+                do_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) ###########OBS!!!!!!!!!!!!!!
         
         return NNr, NNd, NNp
     

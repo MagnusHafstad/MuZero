@@ -1,9 +1,13 @@
 train_config:
-  number_of_episodes: 15
-  number_of_steps_in_episode: 10
-  number_of_MTC_simulations: 20
+  number_of_episodes: 100
+  number_of_steps_in_episode: 50
+  number_of_MTC_simulations: 10
   max_depth: 5
   batch_size: 5
+  train_verbal: True
+  lr_NNr: 0.05
+  lr_NNd: 0.05
+  lr_NNp: 0.05
 game: snake
 game_size: 5
 set_of_actions: [0, 1, 2, 3] # Right, left, up, down

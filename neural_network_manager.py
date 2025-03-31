@@ -28,80 +28,12 @@ def pick_activation_func(name):
         raise ValueError("Invalid activation function name.")
 
 
-def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
-    unkown_magic = 5
-    q = unkown_magic
-    p = unkown_magic
-
-    for m in range(batch_size):
-        episode = random.choice(episode_history)
-        state = []
-        actions = []
-        policies = []
-        values = []
-        rewards = []
-        for ep in episode:
-            state.append(ep[0])
-            values.append(ep[1])
-            policies.append(ep[2])
-            actions.append(ep[3])
-            rewards.append(ep[4])
-
-        i = random.randint(0, len(state)-1)
-        state = state[i]
-        actions = actions[i]
-        policies = torch.tensor(policies[i], dtype=torch.float32)
-        values = torch.tensor(values[i], dtype=torch.float32)
-        rewards = torch.tensor(rewards[i], dtype=torch.float32)
-    
-        abstract_state = NNr(state)
-        print("abstract_state", abstract_state)
-        next_abstract_state, predicted_reward, __ = NNd(abstract_state, actions)
-        predicted_policies, predicted_values = NNp(next_abstract_state)
-        predicted_reward = torch.tensor(predicted_reward, dtype=torch.float32)
-        predicted_policies =torch.tensor(predicted_policies,dtype=torch.float32)
-        predictions = [predicted_policies, predicted_values, predicted_reward]
-        true = [policies, values, rewards]
-
-        loss_fn = nn.MSELoss()
-
-        optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
-        optimizerR.zero_grad()
-        lossR = loss_fn(torch.tensor(predicted_values,dtype=torch.float32), values)
-        #lossR.backward(retain_graph=True)
-        torch.nn.utils.clip_grad_norm_(NNr.parameters(), 3)
-        optimizerR.step()
-        print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
-
-        optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
-        optimizerD.zero_grad()
-        lossD = loss_fn(predicted_reward, rewards)
-        #lossD.backward(retain_graph=True)
-        optimizerD.step()
-        torch.nn.utils.clip_grad_norm_(NNd.parameters(), 3)
-        print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
-
-        optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.05)
-        optimizerP.zero_grad()
-        lossP = loss_fn(predicted_policies, policies)
-        #lossP.backward()
-        print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
-        torch.nn.utils.clip_grad_norm_(NNp.parameters(), 3)
-        optimizerP.step()
-        
-
-
-        print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
-
-
-    return NNr, NNd, NNp
-
 
 def get_random_instance_with_idx(list:list):
     i = random.choice(range(len(list)))
     return list[i], i
 
-def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward
+def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward
     look_ahead = 1
     look_back = 1
     
@@ -140,8 +72,6 @@ def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real
     # predicted_values = []
     # predicted_policies = []
 
-
-
     # Predicted PVR
     abstract_state = NNr(state)
     next_abstract_state, predicted_reward, __ = NNd(abstract_state, actions)
@@ -164,34 +94,36 @@ def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real
 
     loss_fn = nn.MSELoss()
 
-    optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
+    optimizerR = torch.optim.SGD(NNr.parameters(), lr=config["learning_config"]["lr_NNr"])
     optimizerR.zero_grad()
     lossR = loss_fn(predicted_values, values)
     lossR.backward(retain_graph=True)
     torch.nn.utils.clip_grad_norm_(NNr.parameters(), 3)
     optimizerR.step()
-    print("her:")
-    print(values)
-    print(predicted_values)
-    print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
 
-    optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
+
+    optimizerD = torch.optim.SGD(NNd.parameters(), lr=config["learning_config"]["lr_NNd"])
     optimizerD.zero_grad()
     lossD = loss_fn(predicted_reward, rewards)
     lossD.backward(retain_graph=True)
     optimizerD.step()
     torch.nn.utils.clip_grad_norm_(NNd.parameters(), 3)
-    print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
+    
 
-    optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.05)
+    optimizerP = torch.optim.SGD(NNp.parameters(), lr=config["learning_config"]["lr_nnp"])
     optimizerP.zero_grad()
     lossP = loss_fn(predicted_policies, policies)
     lossP.backward()
-    print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
+
     torch.nn.utils.clip_grad_norm_(NNp.parameters(), 3)
     optimizerP.step()
         
-    print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
+
+    if config["train_config"]["train_verbal"] == True:
+        print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
+        print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
+        print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
+        print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
 
     NNr.loss.append(lossR.item())
     NNd.loss.append(lossD.item())
