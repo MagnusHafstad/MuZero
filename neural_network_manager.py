@@ -28,80 +28,12 @@ def pick_activation_func(name):
         raise ValueError("Invalid activation function name.")
 
 
-def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
-    unkown_magic = 5
-    q = unkown_magic
-    p = unkown_magic
-
-    for m in range(batch_size):
-        episode = random.choice(episode_history)
-        state = []
-        actions = []
-        policies = []
-        values = []
-        rewards = []
-        for ep in episode:
-            state.append(ep[0])
-            values.append(ep[1])
-            policies.append(ep[2])
-            actions.append(ep[3])
-            rewards.append(ep[4])
-
-        i = random.randint(0, len(state)-1)
-        state = state[i]
-        actions = actions[i]
-        policies = torch.tensor(policies[i], dtype=torch.float32)
-        values = torch.tensor(values[i], dtype=torch.float32)
-        rewards = torch.tensor(rewards[i], dtype=torch.float32)
-    
-        abstract_state = NNr(state)
-        print("abstract_state", abstract_state)
-        next_abstract_state, predicted_reward, __ = NNd(abstract_state, actions)
-        predicted_policies, predicted_values = NNp(next_abstract_state)
-        predicted_reward = torch.tensor(predicted_reward, dtype=torch.float32)
-        predicted_policies =torch.tensor(predicted_policies,dtype=torch.float32)
-        predictions = [predicted_policies, predicted_values, predicted_reward]
-        true = [policies, values, rewards]
-
-        loss_fn = nn.MSELoss()
-
-        optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
-        optimizerR.zero_grad()
-        lossR = loss_fn(torch.tensor(predicted_values,dtype=torch.float32), values)
-        #lossR.backward(retain_graph=True)
-        torch.nn.utils.clip_grad_norm_(NNr.parameters(), 3)
-        optimizerR.step()
-        print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
-
-        optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
-        optimizerD.zero_grad()
-        lossD = loss_fn(predicted_reward, rewards)
-        #lossD.backward(retain_graph=True)
-        optimizerD.step()
-        torch.nn.utils.clip_grad_norm_(NNd.parameters(), 3)
-        print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
-
-        optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.05)
-        optimizerP.zero_grad()
-        lossP = loss_fn(predicted_policies, policies)
-        #lossP.backward()
-        print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
-        torch.nn.utils.clip_grad_norm_(NNp.parameters(), 3)
-        optimizerP.step()
-        
-
-
-        print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
-
-
-    return NNr, NNd, NNp
-
-
 def get_random_instance_with_idx(list:list):
     i = random.choice(range(len(list)))
     return list[i], i
 
 def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward
+    
     look_ahead = 1
     look_back = 1
     
@@ -109,7 +41,7 @@ def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real
     count = 0
     while len(episode) <= 1:
         episode = random.choice(episode_history)
-        count += 1
+        count = count + 1
         if count == 10:
             print("I give up, I deserve nothing but death")
 
@@ -143,10 +75,12 @@ def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real
 
 
     # Predicted PVR
-    abstract_state = NNr(state)
+    state_tensor = torch.from_numpy(np.array(state)).float()
+    state_tensor.requires_grad = True  # Ensure the tensor requires gradient
+    abstract_state = NNr(state_tensor)
     next_abstract_state, predicted_reward, __ = NNd(abstract_state, actions)
     predicted_policies, predicted_values = NNp(next_abstract_state)
-    
+    print("Predicted values is leaf(after network): ", predicted_values.is_leaf)
 
     # predicted_reward = torch.tensor(predicted_reward, dtype=torch.float32)
     # predicted_policies =torch.tensor(predicted_policies,dtype=torch.float32)
@@ -157,21 +91,43 @@ def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real
     
     # values = [t.unsqueeze(0) for t in values]
     # values = torch.cat(values)
-    values =torch.tensor(values,dtype=torch.float32)
+    values = torch.cat(values)
 
     predictions = [predicted_policies, predicted_values, predicted_reward]
     true = [policies, values, rewards]
-
+    
     loss_fn = nn.MSELoss()
 
-    optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
+    predicted_values = predicted_values.squeeze(1)
+    print("Predicted values is leaf (squeeze): ", predicted_values.is_leaf)
+    
+    optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.0001)
+    
     optimizerR.zero_grad()
+    predicted_values = predicted_values.view(-1)
+    values = values.view(-1)
+    print("Shape is the same: ", predicted_values.shape == values.shape ,predicted_values.shape, values.shape)
+    print("Requires grad check:", predicted_values.requires_grad, values.requires_grad)
+    print("Grad_fn for predicted values: ", predicted_values.grad_fn)
+    print("NNr output:", predicted_values)
+    print("Predicted values is leaf: ", predicted_values.is_leaf)
+
+
     lossR = loss_fn(predicted_values, values)
     lossR.backward(retain_graph=True)
+    print("Loss value:", lossR.item())
+
     torch.nn.utils.clip_grad_norm_(NNr.parameters(), 3)
     optimizerR.step()
+    for param in NNr.parameters():
+        print(param.grad is None, param.shape)
+    for name, param in NNr.named_parameters():
+        if param.grad is None:
+            print(f"❌ No gradient for {name}")
+        else:
+            print(f"✅ Gradient found for {name}")
     print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
-
+    
     optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
     optimizerD.zero_grad()
     lossD = loss_fn(predicted_reward, rewards)
@@ -212,11 +168,8 @@ class RepresentationNetwork(nn.Module):
         self.fc = nn.Sequential(*layers_list)
     
     def forward(self, state): 
-        # Ensure state tensor has a batch dimension
-        state=torch.tensor(state, dtype=torch.float32)
-        #state=state.view(-1)
         if state.dim() == 1:
-            state = state.unsqueeze(0)  # Add batch dimension
+            state = state.unsqueeze(0)  # Add batch dimension if necessary
         return self.fc(state)
 
 class DynamicsNetwork(nn.Module):

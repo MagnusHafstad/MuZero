@@ -1,7 +1,7 @@
 train_config:
   number_of_episodes: 100
   number_of_steps_in_episode: 100
-  number_of_MTC_simulations: 300
+  number_of_MTC_simulations: 100
   max_depth: 5
   batch_size: 5
 game: snake

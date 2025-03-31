@@ -88,7 +88,7 @@ class Reinforcement_Learning_System:
         """|
         This should return the trained ANN objects for the Q-function, the policy and the value function.
         """
-
+        torch.autograd.set_detect_anomaly(True)
         # init ANN objects
         NNr = RepresentationNetwork()
         if nn_config["representation"]["load_path"]:
@@ -112,7 +112,9 @@ class Reinforcement_Learning_System:
 
             for k in range(config["train_config"]['number_of_steps_in_episode']):
                 #makes a new abstract state for each step
-                abstract_state = NNr.forward(real_game_states[k].flatten())
+                flattened_state = real_game_states[k].flatten()
+                tensor_state = torch.from_numpy(flattened_state).float()
+                abstract_state = NNr(tensor_state)
                 u_tree = U_tree(abstract_state, config["train_config"]["max_depth"], actions)
                 #Runs MCTS
                 for m in range(config["train_config"]['number_of_MTC_simulations']):
