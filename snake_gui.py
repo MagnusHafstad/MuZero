@@ -22,6 +22,7 @@ class SnakeGUI:
         self.background = pygame.Surface(self.play_grid)
         self.background.fill(pygame.Color(self.color_map[0]))
 
+
     def update_gui(self, matrix):
         max_idx = np.argmax(matrix)
         row, col = np.unravel_index(max_idx, matrix.shape)

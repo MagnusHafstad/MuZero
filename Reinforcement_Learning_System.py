@@ -140,7 +140,7 @@ class Reinforcement_Learning_System:
                     break
             self.episode_history.append(episode_data)
             #does backpropagation
-            if len(self.episode_history) % config['train_config']['batch_size'] == 0:
+            if len(self.episode_history) % config['train_config']['training_interval'] == 0:
                 do_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) ###########OBS!!!!!!!!!!!!!!
         
         return NNr, NNd, NNp
@@ -151,9 +151,7 @@ system = Reinforcement_Learning_System(Snake)
 NNr, NNd, NNp = system.episode_loop()
 system.plot_metrics()
 system.plot_loss(NNr, NNd, NNp)
-print(system.episode_history[0])
-print(system.episode_history[1])
-print(system.episode_history[2])
+
 
 
 
