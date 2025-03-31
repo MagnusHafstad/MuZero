@@ -55,7 +55,7 @@ def test_select_child_node():
 def test_search_to_leaf():
     game = Snake(5)
     u_tree = U_tree(game.board, 10, [0,1,2,3])
-    u_tree.root.add_child(game.board, u_tree.root, 10, 1, "playing")    
+    u_tree.root.add_child(game.board, u_tree.root, 10, "playing")    
 
 def test_add_child():
     game = Snake(5)
@@ -68,8 +68,8 @@ def test_add_child():
     assert len(u_tree.root.children) == 4
     assert u_tree.root.children[0].depth == 1
     assert u_tree.root.children[0].status == "playing"
-    assert u_tree.root.children[0].reward == 10 # alive
-    assert u_tree.root.children[1].reward == 0 # dead
+    assert u_tree.root.children[0].reward == 0.001 # alive
+    assert u_tree.root.children[1].reward == -1 # dead
     assert u_tree.root.children[0].parent == u_tree.root
 
 
@@ -118,7 +118,7 @@ def test_do_rollout():
     accum_reward = u_tree.do_rollout(u_tree.root.children[0], 2, game.get_policy, game.get_next_state_and_reward)
     
     assert len(accum_reward) == 3
-    
+
 
 def test_do_rollout_early_stop():
     bad_situation = np.array([[4, 3, 0, 0, 0],
