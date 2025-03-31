@@ -151,6 +151,9 @@ system = Reinforcement_Learning_System(Snake)
 NNr, NNd, NNp = system.episode_loop()
 system.plot_metrics()
 system.plot_loss(NNr, NNd, NNp)
+print(system.episode_history[0])
+print(system.episode_history[1])
+print(system.episode_history[2])
 
 
 

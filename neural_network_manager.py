@@ -34,8 +34,8 @@ def get_random_instance_with_idx(list:list):
     return list[i], i
 
 def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward
-    look_ahead = 1
-    look_back = 1
+    look_ahead = config["train_config"]["look_ahead"]
+    look_back = config["train_config"]["look_back"]
     
     episode, episode_idx = get_random_instance_with_idx(episode_history)
     count = 0

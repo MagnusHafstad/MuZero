@@ -4,10 +4,12 @@ train_config:
   number_of_MTC_simulations: 100
   max_depth: 5
   batch_size: 5
-  train_verbal: True
+  train_verbal: False
   lr_NNr: 0.1
   lr_NNd: 0.1
   lr_NNp: 0.1
+  look_ahead: 3
+  look_back: 3
 game: snake
 game_size: 5
 set_of_actions: [0, 1, 2, 3] # Right, left, up, down
@@ -15,3 +17,12 @@ head: True
 game_over_reward: -999
 exploration_rate: 1.41421
 use_NN: True
+snake_head_color: 
+  - 255
+  - 20
+  - 147
+snake_color: 
+  - 255
+  - 105
+  - 180
+
