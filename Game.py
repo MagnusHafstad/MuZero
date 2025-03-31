@@ -182,3 +182,5 @@ class Snake():
         snake_length = np.max(self.board)
         return snake_length
     
+# game = Snake(5)
+# game.game_loop()

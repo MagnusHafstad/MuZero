@@ -32,46 +32,43 @@ def get_random_instance_with_idx(list:list):
     i = random.choice(range(len(list)))
     return list[i], i
 
-def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward
+def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward
     
-    look_ahead = 1
-    look_back = 1
+    look_ahead = config["train_config"]["look_ahead"]
+    look_back = config["train_config"]["look_back"]
+
+    for i in range(batch_size):
+        print("training: ", i)
     
-    episode, episode_idx = get_random_instance_with_idx(episode_history)
-    count = 0
-    while len(episode) <= 1:
-        episode = random.choice(episode_history)
-        count = count + 1
-        if count == 10:
-            print("I give up, I deserve nothing but death")
+        episode, episode_idx = get_random_instance_with_idx(episode_history)#[config["train_config"]["train_interval"]:]) kan kanskje begrene til å sepå de siste episodene
+        count = 0
+        while len(episode) <= 1:
+            episode = random.choice(episode_history)
+            count = count + 1
+            if count == 10:
+                print("I give up, I deserve nothing but death")
 
-    step, step_idx = get_random_instance_with_idx(episode)
+        step, step_idx = get_random_instance_with_idx(episode)
 
 
-    if step_idx <= look_back:
-            look_back = step_idx
-    if len(episode) - step_idx <= look_ahead:
-        look_ahead = len(episode) - step_idx - 1
-    step_array = episode[step_idx - look_back : step_idx + look_ahead + 1]
+        if step_idx <= look_back:
+                look_back = step_idx
+        if len(episode) - step_idx <= look_ahead:
+            look_ahead = len(episode) - step_idx - 1
+            
+        step_array = episode[step_idx - look_back : step_idx + look_ahead + 1]
 
-    state = []
-    actions = []
-    policies = []
-    values = []
-    rewards = []
-    for step in step_array:
-        state.append(step[0].flatten())
-        values.append(step[1])
-        policies.append(step[2])
-        actions.append(step[3])
-        rewards.append(step[4])
-        
-   
-    # next_abstract_state =[]
-    # predicted_reward = []
-    # predicted_values = []
-    # predicted_policies = []
-
+        state = []
+        actions = []
+        policies = []
+        values = []
+        rewards = []
+        for step in step_array:
+            state.append(step[0].flatten())
+            values.append(step[1])
+            policies.append(step[2])
+            actions.append(step[3])
+            rewards.append(step[4])
 
 
     # Predicted PVR
@@ -82,9 +79,9 @@ def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real
     predicted_policies, predicted_values = NNp(next_abstract_state)
     print("Predicted values is leaf(after network): ", predicted_values.is_leaf)
 
-    # predicted_reward = torch.tensor(predicted_reward, dtype=torch.float32)
-    # predicted_policies =torch.tensor(predicted_policies,dtype=torch.float32)
-    # predicted_values =torch.tensor(predicted_values,dtype=torch.float32)
+        # predicted_reward = torch.tensor(predicted_reward, dtype=torch.float32)
+        # predicted_policies =torch.tensor(predicted_policies,dtype=torch.float32)
+        # predicted_values =torch.tensor(predicted_values,dtype=torch.float32)
 
     rewards = torch.tensor(rewards, dtype=torch.float32)
     policies =torch.tensor(policies,dtype=torch.float32)
@@ -136,15 +133,24 @@ def second_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real
     torch.nn.utils.clip_grad_norm_(NNd.parameters(), 3)
     print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
 
-    optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.05)
-    optimizerP.zero_grad()
-    lossP = loss_fn(predicted_policies, policies)
-    lossP.backward()
-    print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
-    torch.nn.utils.clip_grad_norm_(NNp.parameters(), 3)
-    optimizerP.step()
-        
-    print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
+        optimizerP = torch.optim.SGD(NNp.parameters(), lr=config["train_config"]["lr_NNp"])
+        optimizerP.zero_grad()
+        lossP = loss_fn(predicted_policies, policies)
+        lossP.backward()
+
+        torch.nn.utils.clip_grad_norm_(NNp.parameters(), 3)
+        optimizerP.step()
+            
+
+        if config["train_config"]["train_verbal"] == True:
+            print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
+            print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
+            print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
+            print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
+
+    NNr.loss.append(lossR.item())
+    NNd.loss.append(lossD.item())
+    NNp.loss.append(lossP.item())
    
    
     return NNr, NNd, NNp
@@ -157,6 +163,7 @@ class RepresentationNetwork(nn.Module):
         super().__init__()
         layers_list = []
         prev_dim = input_dim
+        self.loss = []
         
         for hidden_dim in layers:
             layers_list.append(nn.Linear(prev_dim, hidden_dim["dim"]))
@@ -179,6 +186,7 @@ class DynamicsNetwork(nn.Module):
         layers_list = []
         self.abstract_state_dim = abstract_state_dim
         prev_dim = action_dim + abstract_state_dim
+        self.loss = []
 
         for hidden_dim in layers:
             layers_list.append(nn.Linear(prev_dim, hidden_dim["dim"]))
@@ -217,6 +225,7 @@ class PredictionNetwork(nn.Module):
         # Shared layers
         layers_list = []
         prev_dim = abstract_state_dim
+        self.loss = []
         
         for hidden_dim in layers:
             layers_list.append(nn.Linear(prev_dim, hidden_dim["dim"]))

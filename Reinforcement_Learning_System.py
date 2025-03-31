@@ -50,12 +50,22 @@ class Reinforcement_Learning_System:
             # score.append(ep[5])
 
         X = np.linspace(1,len(self.episode_history), len(self.episode_history))
-        plt.plot(X, survival, label ="survival")
-        plt.plot(X, score, label ="length")
+        plt.plot(X, survival, label ="survival") #kan kanskje være en ide å se på et gjennomsnitt
+        plt.plot(X, np.array(score)-2, label ="fruit eaten")
         for i in range(config["train_config"]["batch_size"], len(X), config["train_config"]["batch_size"]):
             plt.axvline(x = i, ymin = 0.7, ymax = 1,  color = 'b')
         plt.xlabel("Episodes")
         plt.legend()
+        plt.show()
+
+    def plot_loss(self, NNr,NNd,NNp):
+        X = np.linspace(1,len(NNr.loss), len(NNr.loss)) 
+        #plt.plot(X, NNr.loss, label = "NNr")
+        plt.plot(X, NNd.loss, label = "NNd")
+        plt.plot(X, NNp.loss, label = "NNp")
+        plt.legend()
+        plt.xlabel("Training session")
+        plt.ylabel("Loss")
         plt.show()
 
     def generate_real_game_states(self, episode_nr) -> list[tuple]:
@@ -127,13 +137,13 @@ class Reinforcement_Learning_System:
                 next_state, next_reward = game.simulate_game_step(real_game_states[k], next_action)
                 #next_state = next_state.detach().numpy()
                 real_game_states[k+1]= next_state
-                episode_data.append([real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward, game.get_score()])
+                episode_data.append([real_game_states[k],root_value, final_policy_for_step, next_action, next_reward, game.get_score()])
                 if game.status == "game_over":
                     break
             self.episode_history.append(episode_data)
             #does backpropagation
-            if len(self.episode_history) % config['train_config']['batch_size'] == 0:
-                second_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) ###########OBS!!!!!!!!!!!!!!
+            if len(self.episode_history) % config['train_config']['training_interval'] == 0:
+                do_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) ###########OBS!!!!!!!!!!!!!!
         
         return NNr, NNd, NNp
     
@@ -142,6 +152,11 @@ system = Reinforcement_Learning_System(Snake)
 
 NNr, NNd, NNp = system.episode_loop()
 system.plot_metrics()
+system.plot_loss(NNr, NNd, NNp)
+
+
+
+
 # Save the models
 # torch.save(NNr.state_dict(), nn_config["representation"]["save_path"]+'.pth')
 # if nn_config["representation"]["save_path"]:
