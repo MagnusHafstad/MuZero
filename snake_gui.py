@@ -19,11 +19,17 @@ class SnakeGUI:
         self.background.fill(pygame.Color(self.color_map[0]))
 
     def update_gui(self, matrix):
+        max_idx = np.argmax(matrix)
+        row, col = np.unravel_index(max_idx, matrix.shape)
+        max_value = matrix[row, col]
+        self.color_map.update({max_value: (20, 110, 40)})
+
         for row in range(self.matrix_size):
                 for col in range(self.matrix_size):
-                    color = self.color_map[matrix[row][col]]
+                    color= self.color_map[matrix[row][col]]
                     pygame.draw.rect(self.window_surface, color, (col * self.cell_size, row * self.cell_size, self.cell_size, self.cell_size))
         pygame.time.wait(100)
+        self.color_map.update({max_value: (0, 255, 0)})
         pygame.display.flip()
 
     def user_input(self, prev_direction):
@@ -48,3 +54,4 @@ class SnakeGUI:
 
 
 
+gui = SnakeGUI(5)
