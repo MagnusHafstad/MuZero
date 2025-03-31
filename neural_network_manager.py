@@ -94,7 +94,7 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_gam
 
     loss_fn = nn.MSELoss()
 
-    optimizerR = torch.optim.SGD(NNr.parameters(), lr=config["learning_config"]["lr_NNr"])
+    optimizerR = torch.optim.SGD(NNr.parameters(), lr=config["train_config"]["lr_NNr"])
     optimizerR.zero_grad()
     lossR = loss_fn(predicted_values, values)
     lossR.backward(retain_graph=True)
@@ -102,7 +102,7 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_gam
     optimizerR.step()
 
 
-    optimizerD = torch.optim.SGD(NNd.parameters(), lr=config["learning_config"]["lr_NNd"])
+    optimizerD = torch.optim.SGD(NNd.parameters(), lr=config["train_config"]["lr_NNd"])
     optimizerD.zero_grad()
     lossD = loss_fn(predicted_reward, rewards)
     lossD.backward(retain_graph=True)
@@ -110,7 +110,7 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_gam
     torch.nn.utils.clip_grad_norm_(NNd.parameters(), 3)
     
 
-    optimizerP = torch.optim.SGD(NNp.parameters(), lr=config["learning_config"]["lr_nnp"])
+    optimizerP = torch.optim.SGD(NNp.parameters(), lr=config["train_config"]["lr_NNp"])
     optimizerP.zero_grad()
     lossP = loss_fn(predicted_policies, policies)
     lossP.backward()
