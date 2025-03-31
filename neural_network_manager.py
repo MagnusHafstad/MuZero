@@ -98,17 +98,17 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_gam
     predicted_values = predicted_values.squeeze(1)
     print("Predicted values is leaf (squeeze): ", predicted_values.is_leaf)
     
+    # R NNr
     optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.0001)
-    
     optimizerR.zero_grad()
     predicted_values = predicted_values.view(-1)
     values = values.view(-1)
+    
     print("Shape is the same: ", predicted_values.shape == values.shape ,predicted_values.shape, values.shape)
     print("Requires grad check:", predicted_values.requires_grad, values.requires_grad)
     print("Grad_fn for predicted values: ", predicted_values.grad_fn)
     print("NNr output:", predicted_values)
     print("Predicted values is leaf: ", predicted_values.is_leaf)
-
 
     lossR = loss_fn(predicted_values, values)
     lossR.backward(retain_graph=True)
@@ -125,6 +125,7 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_gam
             print(f"✅ Gradient found for {name}")
     print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
     
+    # D NNd
     optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
     optimizerD.zero_grad()
     lossD = loss_fn(predicted_reward, rewards)
@@ -133,20 +134,21 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_gam
     torch.nn.utils.clip_grad_norm_(NNd.parameters(), 3)
     print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
 
-        optimizerP = torch.optim.SGD(NNp.parameters(), lr=config["train_config"]["lr_NNp"])
-        optimizerP.zero_grad()
-        lossP = loss_fn(predicted_policies, policies)
-        lossP.backward()
+    # P NNp
+    optimizerP = torch.optim.SGD(NNp.parameters(), lr=config["train_config"]["lr_NNp"])
+    optimizerP.zero_grad()
+    lossP = loss_fn(predicted_policies, policies)
+    lossP.backward()
 
-        torch.nn.utils.clip_grad_norm_(NNp.parameters(), 3)
-        optimizerP.step()
-            
+    torch.nn.utils.clip_grad_norm_(NNp.parameters(), 3)
+    optimizerP.step()
+        
 
-        if config["train_config"]["train_verbal"] == True:
-            print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
-            print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
-            print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
-            print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
+    if config["train_config"]["train_verbal"] == True:
+        print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
+        print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
+        print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
+        print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
 
     NNr.loss.append(lossR.item())
     NNd.loss.append(lossD.item())
