@@ -98,7 +98,7 @@ class Reinforcement_Learning_System:
         """|
         This should return the trained ANN objects for the Q-function, the policy and the value function.
         """
-        torch.autograd.set_detect_anomaly(True)
+        torch.autograd.set_detect_anomaly(False)
         # init ANN objects
         NNr = RepresentationNetwork()
         if nn_config["representation"]["load_path"]:

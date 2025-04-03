@@ -32,130 +32,75 @@ def get_random_instance_with_idx(list:list):
     i = random.choice(range(len(list)))
     return list[i], i
 
-def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_game_states[-1],root_value, final_policy_for_step, next_action, next_reward
-    
+def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int):
     look_ahead = config["train_config"]["look_ahead"]
     look_back = config["train_config"]["look_back"]
+    loss_fn = nn.MSELoss()
+
+    # Define optimizers jointly for all networks
+    parameters = list(NNr.parameters()) + list(NNd.parameters()) + list(NNp.parameters())
+    optimizer = optim.SGD(parameters, lr=config["train_config"]["lr"], momentum=0.9)
 
     for i in range(batch_size):
-        print("training: ", i)
-    
-        episode, episode_idx = get_random_instance_with_idx(episode_history)#[config["train_config"]["train_interval"]:]) kan kanskje begrene til å sepå de siste episodene
-        count = 0
+        episode, _ = get_random_instance_with_idx(episode_history)
         while len(episode) <= 1:
-            episode = random.choice(episode_history)
-            count = count + 1
-            if count == 10:
-                print("I give up, I deserve nothing but death")
+            episode, _ = get_random_instance_with_idx(episode_history)
 
         step, step_idx = get_random_instance_with_idx(episode)
 
+        actual_look_back = min(look_back, step_idx)
+        actual_look_ahead = min(look_ahead, len(episode) - step_idx - 1)
+        step_array = episode[step_idx - actual_look_back : step_idx + actual_look_ahead + 1]
 
-        if step_idx <= look_back:
-                look_back = step_idx
-        if len(episode) - step_idx <= look_ahead:
-            look_ahead = len(episode) - step_idx - 1
+        states = torch.stack([torch.from_numpy(step[0]).float().flatten() for step in step_array[:actual_look_back+1]])
+        actions = [step[3] for step in step_array[actual_look_back:]]
+        target_policies = torch.stack([torch.tensor(step[2]).float() for step in step_array[actual_look_back:]])
+        target_values = torch.stack([torch.tensor(step[1]).float() for step in step_array[actual_look_back:]])
+        target_rewards = torch.stack([torch.tensor(step[4]).float() for step in step_array[actual_look_back:]])
+
+        # Forward pass
+        hidden_state = NNr(states)
+        predicted_policies = []
+        predicted_values = []
+        predicted_rewards = []
+
+        for action in actions:
             
-        step_array = episode[step_idx - look_back : step_idx + look_ahead + 1]
+            action_tensor = torch.tensor([[action]], dtype=torch.float32)  # adds batch dimension explicitly
+            hidden_state, reward = NNd(hidden_state, action_tensor)
+            policy, value = NNp(hidden_state)
+            predicted_rewards.append(reward)
+            predicted_policies.append(policy)
+            predicted_values.append(value)
 
-        state = []
-        actions = []
-        policies = []
-        values = []
-        rewards = []
-        for step in step_array:
-            state.append(step[0].flatten())
-            values.append(step[1])
-            policies.append(step[2])
-            actions.append(step[3])
-            rewards.append(step[4])
+        predicted_rewards = torch.stack(predicted_rewards)
+        predicted_policies = torch.stack(predicted_policies)
+        predicted_values = torch.stack(predicted_values)
 
+        # Compute losses
+        loss_reward = loss_fn(predicted_rewards, target_rewards)
+        loss_policy = loss_fn(predicted_policies, target_policies)
+        loss_value = loss_fn(predicted_values.squeeze(-1), target_values)
 
-    # Predicted PVR
-    state_tensor = torch.from_numpy(np.array(state)).float()
-    state_tensor.requires_grad = True  # Ensure the tensor requires gradient
-    abstract_state = NNr(state_tensor)
-    next_abstract_state, predicted_reward, __ = NNd(abstract_state, actions)
-    predicted_policies, predicted_values = NNp(next_abstract_state)
-    print("Predicted values is leaf(after network): ", predicted_values.is_leaf)
+        # Total loss
+        loss = loss_reward + loss_policy + loss_value
 
-        # predicted_reward = torch.tensor(predicted_reward, dtype=torch.float32)
-        # predicted_policies =torch.tensor(predicted_policies,dtype=torch.float32)
-        # predicted_values =torch.tensor(predicted_values,dtype=torch.float32)
+        # Backpropagation
+        optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(parameters, max_norm=3)
+        optimizer.step()
 
-    rewards = torch.tensor(rewards, dtype=torch.float32)
-    policies =torch.tensor(policies,dtype=torch.float32)
-    
-    # values = [t.unsqueeze(0) for t in values]
-    # values = torch.cat(values)
-    values = torch.cat(values)
+        # Store losses
+        NNr.loss.append(loss.item())
+        NNd.loss.append(loss.item())
+        NNp.loss.append(loss.item())
 
-    predictions = [predicted_policies, predicted_values, predicted_reward]
-    true = [policies, values, rewards]
-    
-    loss_fn = nn.MSELoss()
+        if config["train_config"].get("train_verbal", False):
+            print(f"Batch {i+1}/{batch_size}: Loss = {loss.item():.4f} (Reward: {loss_reward.item():.4f}, Policy: {loss_policy.item():.4f}, Value: {loss_value.item():.4f})")
 
-    predicted_values = predicted_values.squeeze(1)
-    print("Predicted values is leaf (squeeze): ", predicted_values.is_leaf)
-    
-    # R NNr
-    optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.0001)
-    optimizerR.zero_grad()
-    predicted_values = predicted_values.view(-1)
-    values = values.view(-1)
-    
-    print("Shape is the same: ", predicted_values.shape == values.shape ,predicted_values.shape, values.shape)
-    print("Requires grad check:", predicted_values.requires_grad, values.requires_grad)
-    print("Grad_fn for predicted values: ", predicted_values.grad_fn)
-    print("NNr output:", predicted_values)
-    print("Predicted values is leaf: ", predicted_values.is_leaf)
-
-    lossR = loss_fn(predicted_values, values)
-    lossR.backward(retain_graph=True)
-    print("Loss value:", lossR.item())
-
-    torch.nn.utils.clip_grad_norm_(NNr.parameters(), 3)
-    optimizerR.step()
-    for param in NNr.parameters():
-        print(param.grad is None, param.shape)
-    for name, param in NNr.named_parameters():
-        if param.grad is None:
-            print(f"❌ No gradient for {name}")
-        else:
-            print(f"✅ Gradient found for {name}")
-    print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
-    
-    # D NNd
-    optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.05)
-    optimizerD.zero_grad()
-    lossD = loss_fn(predicted_reward, rewards)
-    lossD.backward(retain_graph=True)
-    optimizerD.step()
-    torch.nn.utils.clip_grad_norm_(NNd.parameters(), 3)
-    print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
-
-    # P NNp
-    optimizerP = torch.optim.SGD(NNp.parameters(), lr=config["train_config"]["lr_NNp"])
-    optimizerP.zero_grad()
-    lossP = loss_fn(predicted_policies, policies)
-    lossP.backward()
-
-    torch.nn.utils.clip_grad_norm_(NNp.parameters(), 3)
-    optimizerP.step()
-        
-
-    if config["train_config"]["train_verbal"] == True:
-        print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
-        print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
-        print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
-        print(f"Loss R: {lossR.item()}, Loss D: {lossD.item()}, Loss P: {lossP.item()}")
-
-    NNr.loss.append(lossR.item())
-    NNd.loss.append(lossD.item())
-    NNp.loss.append(lossP.item())
-   
-   
     return NNr, NNd, NNp
+
     
 
 
@@ -202,15 +147,15 @@ class DynamicsNetwork(nn.Module):
     def forward(self, abstract_state, action):
         # Ensure state and action tensors have a batch dimension
         abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
-        
+        print("action", action)
         #abstract_state=abstract_state.view(-1)
         action=torch.tensor(action, dtype=torch.float32)
-        
+        print("action Tensor", action)
         action = action.unsqueeze(1)
 
         #action=action.view(-1)
         
-
+        print("absState", abstract_state)
         x = torch.cat([abstract_state, action], dim=-1)  # Concatenate state and action
         x = self.fc(x)
   
