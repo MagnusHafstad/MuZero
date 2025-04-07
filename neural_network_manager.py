@@ -36,20 +36,17 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
 
     look_ahead = config["train_config"]["look_ahead"]
     look_back = config["train_config"]["look_back"]
-    print(f"Parameters NNr: {NNr.parameters().__next__()}")
-    print(f"Parameters NNd: {NNd.parameters().__next__()}")
-    print(f"Parameters NNp: {NNp.parameters().__next__()}")
 
     nn_param = list(NNr.parameters()) +list(NNd.parameters()) +list(NNp.parameters())
-    optimizer = torch.optim.SGD(nn_param, lr = 0.05)
+    optimizer = torch.optim.SGD(nn_param, lr = 0.001)
     for i in range(batch_size):
         optimizer.zero_grad()
         episode, episode_idx = get_random_instance_with_idx(episode_history)#[config["train_config"]["train_interval"]:]) kan kanskje begrene til å sepå de siste episodene
         count = 0
-        while len(episode) <= 1:
+        while len(episode) <= 2:
             episode = random.choice(episode_history)
             count = count + 1
-            if count == 10:
+            if count > 10:
                 print("I give up, I deserve nothing but death")
 
         step, step_idx = get_random_instance_with_idx(episode)
@@ -95,15 +92,19 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
 
         for action in look_ahead_actions:
             next_abstract_state, predicted_reward, __ = NNd(abstract_state, [action])
-            print(next_abstract_state.requires_grad)
             predicted_policy, predicted_value = NNp(next_abstract_state)
             predicted_policies.append(predicted_policy)
             predicted_rewards.append(predicted_reward)
             predicted_values.append(predicted_value)
+            abstract_state = next_abstract_state
 
         predicted_policies = torch.stack(predicted_policies)
         predicted_values = torch.stack(predicted_values)
         predicted_rewards = torch.stack(predicted_rewards)
+
+        print("Predicted values stats:", predicted_values.min(), predicted_values.max(), len(predicted_values))
+        print("real values: ", values.min(), values.max(), len(values))
+
 
         predicted = [predicted_policies, predicted_values, predicted_rewards]
 
@@ -114,7 +115,10 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
         regularization_term = sum(torch.sum(param ** 2) for param in nn_param)
         loss = lossP + lossV + lossR + 0.01 * regularization_term
 
+        print("LossP:", lossP.item(), "LossV:", lossV.item(), "LossR:", lossR.item())
+
         loss.backward(retain_graph=False)
+        torch.nn.utils.clip_grad_norm_(nn_param, max_norm=1.0)
         optimizer.step()
 
     print("Loss value:", loss.item())
@@ -124,9 +128,6 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
         print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
 
     return loss.item()
-
-
-
     
 
 
