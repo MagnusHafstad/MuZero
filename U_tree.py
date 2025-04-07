@@ -17,6 +17,7 @@ class Tree_node():
         self.children = []
         self.parent = parent
         self.visit_count = 0
+        self.total_reward = 0
         self.reward = reward
         self.depth = depth
         self.status = status
@@ -28,7 +29,10 @@ class Tree_node():
 
 class U_tree():
     def __init__(self, abstract_state, d_max, actions):
-        self.root = Tree_node(abstract_state.clone(), None, 0, 0, "playing")
+        if config["use_NN"] == True:
+            self.root = Tree_node(abstract_state.clone(), None, 0, 0, "playing")
+        else:
+            self.root = Tree_node(abstract_state, None, 0, 0, "playing")
         self.d_max = d_max
         self.actions = actions
         # self.game = game
@@ -165,7 +169,8 @@ class U_tree():
     
         while node != None:
             node.visit_count += 1
-            node.reward += reward 
+            node.total_reward += reward 
+            node.reward = node.total_reward/node.visit_count
             reward = node.reward * discount_rate  
             node = node.parent  
 
