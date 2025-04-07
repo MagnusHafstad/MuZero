@@ -1,3 +1,5 @@
 venv/
 *.pyc
 tree.txt
+root_node_reward.txt
+gradient_output.txt

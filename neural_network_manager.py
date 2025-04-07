@@ -119,12 +119,14 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
 
         loss.backward(retain_graph=False)
         optimizer.step()
+        print("-------------------------------------")
 
     print("Loss value:", loss.item())
     if config["train_config"]["train_verbal"] == True:
-        print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
-        print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
-        print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
+        with open('gradient_output.txt', 'w') as f:  # Open file in write mode
+            f.write(f"Gradient NNr: {NNr.parameters().__next__().grad}\n")
+            f.write(f"Gradient NNd: {NNd.parameters().__next__().grad}\n")
+            f.write(f"Gradient NNp: {NNp.parameters().__next__().grad}\n")
 
     return loss.item()
     
