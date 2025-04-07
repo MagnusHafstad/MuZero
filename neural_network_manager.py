@@ -233,13 +233,15 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
 
         predicted = [predicted_policies, predicted_values, predicted_rewards]
 
-        nn_param = [NNr.parameters(),NNd.parameters(),NNp.parameters()]
-        optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.0001)
-        optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.0001)
-        optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.0001)
-        optimizerR.zero_grad()
-        optimizerD.zero_grad()
-        optimizerP.zero_grad()
+        nn_param = list(NNr.parameters()) +list(NNd.parameters()) +list(NNp.parameters())
+        optimizer = torch.optim.SGD(nn_param, lr = 0.0001)
+        # optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.0001)
+        # optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.0001)
+        # optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.0001)
+        # optimizerR.zero_grad()
+        # optimizerD.zero_grad()
+        # optimizerP.zero_grad()
+        optimizer.zero_grad()
 
         loss_fn = nn.MSELoss()
 
@@ -251,6 +253,7 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
         
         loss = lossP + lossV + lossR # + const*abs(param)**2
         loss.backward(retain_graph=True)
+        optimizer.step()
         #loss3.backward(retain_graph=True)
     print("Loss value:", loss.item())
     if config["train_config"]["train_verbal"] == True:
