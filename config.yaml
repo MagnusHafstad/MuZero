@@ -1,7 +1,7 @@
 train_config:
   number_of_episodes: 10
   number_of_steps_in_episode: 50
-  number_of_MTC_simulations: 50
+  number_of_MTC_simulations: 20
   training_interval: 5
   max_depth: 2
   batch_size: 5
@@ -12,6 +12,7 @@ train_config:
   look_ahead: 3
   look_back: 3
 game: snake
+discount_rate: 0.997
 game_size: 5
 set_of_actions: [0, 1, 2, 3] # Right, left, up, down
 head: True

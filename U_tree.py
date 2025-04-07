@@ -116,7 +116,7 @@ class U_tree():
 
         child = random.choice(leaf_node.children)
         accum_reward = self.do_rollout(child, self.d_max - child.depth, get_policy, calc_next_state)
-        self.do_backpropagation(child, sum(accum_reward)) 
+        self.do_backpropagation(child, sum(accum_reward), config["discount_rate"]) 
 
     
     def do_rollout(self, node:Tree_node, depth, get_policy:Callable, calc_next_state:Callable) -> list[float]:

@@ -208,7 +208,7 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
         values = torch.tensor(values[look_back:],dtype=torch.float32)
         rewards = torch.tensor(rewards[look_back:],dtype=torch.float32)
         
-        targets =torch.stack((values, rewards))
+        targets =[policies, values, rewards]
 
         state_tensor = torch.from_numpy(np.array(look_back_states[0])).float()
         state_tensor.requires_grad = True  # Ensure the tensor requires gradient
@@ -231,7 +231,7 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
         predicted_values = torch.stack(predicted_values)
         predicted_rewards = torch.stack(predicted_rewards)
 
-        predicted = torch.stack((predicted_values,predicted_rewards))
+        predicted = [predicted_policies, predicted_values, predicted_rewards]
 
         nn_param = [NNr.parameters(),NNd.parameters(),NNp.parameters()]
         optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.0001)
@@ -243,19 +243,22 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
 
         loss_fn = nn.MSELoss()
 
-        #loss1 = loss_fn(predicted[0], targets[0])
-        loss2 = loss_fn(predicted, targets)
-        #loss3 = loss_fn(predicted[2], targets[2])
+
+        lossP = loss_fn(predicted[0], targets[0])
+        lossV= loss_fn(predicted[1], targets[1])
+        lossR = loss_fn(predicted[2], targets[2])
         #loss1.backward(retain_graph=True)
-        loss2.backward(retain_graph=True)
+        
+        loss = lossP + lossV + lossR # + const*abs(param)**2
+        loss.backward(retain_graph=True)
         #loss3.backward(retain_graph=True)
-    print("Loss value:", loss2.item())
+    print("Loss value:", loss.item())
     if config["train_config"]["train_verbal"] == True:
         print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
         print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
         print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
 
-    return loss2.item()
+    return loss.item()
 
 
 
