@@ -192,7 +192,7 @@ class DynamicsNetwork(nn.Module):
 
 class PredictionNetwork(nn.Module):
     """Prediction Network (NNp) - Outputs policy and value estimates from an abstract state."""
-    def __init__(self, abstract_state_dim=nn_config["abstract_state_dim"], policy_dim=nn_config["policy_dim"], layers=nn_config["prediction"]["layers"], reward_dim=nn_config["reward_dim"], policy_output_layer=nn_config["prediction"]["policy_output_layer"], reward_output_layer=nn_config["prediction"]["reward_output_layer"]):
+    def __init__(self, abstract_state_dim=nn_config["abstract_state_dim"], policy_dim=nn_config["policy_dim"], layers=nn_config["prediction"]["layers"], reward_dim=nn_config["reward_dim"], policy_output_layer=nn_config["prediction"]["policy_output_layer"], value_output_layer=nn_config["prediction"]["value_output_layer"]):
         super().__init__()
         
         # Shared layers
@@ -213,7 +213,7 @@ class PredictionNetwork(nn.Module):
         
         # Value output layers
         self.value_fc = nn.Linear(prev_dim, reward_dim)
-        self.value_activation = pick_activation_func(reward_output_layer)
+        self.value_activation = pick_activation_func(value_output_layer)
     
     def forward(self, abstract_state):
         abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
