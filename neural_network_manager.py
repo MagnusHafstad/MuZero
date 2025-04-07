@@ -154,7 +154,7 @@ class RepresentationNetwork(nn.Module):
 
 class DynamicsNetwork(nn.Module):
     """Dynamics Network (NNd) - Predicts next state and reward given an abstract state and an action."""
-    def __init__(self, action_dim=nn_config["action_dim"], abstract_state_dim=nn_config["abstract_state_dim"], layers=nn_config["dynamics"]["layers"], reward_dim=nn_config["reward_dim"], output_layer=nn_config["representation"]["output_layer"]):
+    def __init__(self, action_dim=nn_config["action_dim"], abstract_state_dim=nn_config["abstract_state_dim"], layers=nn_config["dynamics"]["layers"], reward_dim=nn_config["reward_dim"], state_output_layer=nn_config["dynamics"]["state_output_layer"], reward_output_layer=nn_config["dynamics"]["reward_output_layer"]):
         super().__init__()
         layers_list = []
         self.abstract_state_dim = abstract_state_dim
@@ -163,30 +163,28 @@ class DynamicsNetwork(nn.Module):
 
         for hidden_dim in layers:
             layers_list.append(nn.Linear(prev_dim, hidden_dim["dim"]))
+            layers_list.append(pick_activation_func(hidden_dim["type"]))
             prev_dim = hidden_dim["dim"]
         
-        layers_list.append(nn.Linear(prev_dim, abstract_state_dim + reward_dim))
-        layers_list.append(pick_activation_func(output_layer))
-
         self.fc = nn.Sequential(*layers_list)
+        self.state_output_activation = pick_activation_func(state_output_layer)
+        self.reward_output_activation = pick_activation_func(reward_output_layer)
+        self.state_output_layer = nn.Linear(prev_dim, abstract_state_dim)
+        self.reward_output_layer = nn.Linear(prev_dim, reward_dim)
+        
     
     def forward(self, abstract_state, action):
-        # Ensure state and action tensors have a batch dimension
-        #abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
-        
-        #abstract_state=abstract_state.view(-1)
+        abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
         action=torch.tensor(action, dtype=torch.float32)
-        
-        action = action.unsqueeze(1)
-
-        #action=action.view(-1)
-        
-
+        action = action.unsqueeze(1)        
         x = torch.cat([abstract_state, action], dim=-1)  # Concatenate state and action
         x = self.fc(x)
-  
-        next_state = x[:,:nn_config["abstract_state_dim"]]
-        reward = x[:,nn_config["abstract_state_dim"]:]
+        
+
+        next_state = self.state_output_layer(x)
+        next_state = self.state_output_activation(next_state)
+        reward = self.reward_output_layer(x)
+        reward = self.reward_output_activation(reward)
         
         return next_state, reward, "playing"
 
