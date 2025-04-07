@@ -1,11 +1,11 @@
 train_config:
-  number_of_episodes: 50
-  number_of_steps_in_episode: 100
-  number_of_MTC_simulations: 100
+  number_of_episodes: 10
+  number_of_steps_in_episode: 50
+  number_of_MTC_simulations: 50
   training_interval: 5
-  max_depth: 5
+  max_depth: 2
   batch_size: 5
-  train_verbal: False
+  train_verbal: True
   lr_NNr: 0.1
   lr_NNd: 0.1
   lr_NNp: 0.1

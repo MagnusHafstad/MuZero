@@ -75,6 +75,7 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_gam
     state_tensor = torch.from_numpy(np.array(state)).float()
     state_tensor.requires_grad = True  # Ensure the tensor requires gradient
     abstract_state = NNr(state_tensor)
+    print("abstract_state: ",abstract_state)
     next_abstract_state, predicted_reward, __ = NNd(abstract_state, actions)
     predicted_policies, predicted_values = NNp(next_abstract_state)
     print("Predicted values is leaf(after network): ", predicted_values.is_leaf)
@@ -156,6 +157,108 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_gam
    
    
     return NNr, NNd, NNp
+
+
+def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
+
+    look_ahead = config["train_config"]["look_ahead"]
+    look_back = config["train_config"]["look_back"]
+    print(f"Parameters NNr: {NNr.parameters().__next__()}")
+    print(f"Parameters NNd: {NNd.parameters().__next__()}")
+    print(f"Parameters NNp: {NNp.parameters().__next__()}")
+
+
+    neural_networks = [NNr,NNd,NNp]
+    for i in range(batch_size):
+
+        episode, episode_idx = get_random_instance_with_idx(episode_history)#[config["train_config"]["train_interval"]:]) kan kanskje begrene til å sepå de siste episodene
+        count = 0
+        while len(episode) <= 1:
+            episode = random.choice(episode_history)
+            count = count + 1
+            if count == 10:
+                print("I give up, I deserve nothing but death")
+
+        step, step_idx = get_random_instance_with_idx(episode)
+
+
+        if step_idx <= look_back:
+                look_back = step_idx
+        if len(episode) - step_idx <= look_ahead:
+            look_ahead = len(episode) - step_idx - 1
+            
+        step_array = episode[step_idx - look_back : step_idx + look_ahead + 1]
+
+        state = []
+        actions = []
+        policies = []
+        values = []
+        rewards = []
+        for step in step_array:
+            state.append(step[0].flatten())
+            values.append(step[1])
+            policies.append(step[2])
+            actions.append(step[3])
+            rewards.append(step[4])
+
+        look_back_states = state[0:look_back + 1]
+        look_ahead_actions = actions[look_back:]
+
+        policies = torch.tensor(policies[look_back:],dtype=torch.float32)
+        values = torch.tensor(values[look_back:],dtype=torch.float32)
+        rewards = torch.tensor(rewards[look_back:],dtype=torch.float32)
+        
+        targets =torch.stack((values, rewards))
+
+        state_tensor = torch.from_numpy(np.array(look_back_states[0])).float()
+        state_tensor.requires_grad = True  # Ensure the tensor requires gradient
+        abstract_state = NNr(state_tensor)
+
+        #abstract_state = NNr(look_back_states[0])
+
+        predicted_policies = []
+        predicted_rewards = []
+        predicted_values = []
+
+        for action in look_ahead_actions:
+            next_abstract_state, predicted_reward, __ = NNd(abstract_state, [action])
+            predicted_policy, predicted_value = NNp(next_abstract_state)
+            predicted_policies.append(predicted_policy)
+            predicted_rewards.append(predicted_reward)
+            predicted_values.append(predicted_value)
+
+        predicted_policies = torch.stack(predicted_policies)
+        predicted_values = torch.stack(predicted_values)
+        predicted_rewards = torch.stack(predicted_rewards)
+
+        predicted = torch.stack((predicted_values,predicted_rewards))
+
+        nn_param = [NNr.parameters(),NNd.parameters(),NNp.parameters()]
+        optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.0001)
+        optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.0001)
+        optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.0001)
+        optimizerR.zero_grad()
+        optimizerD.zero_grad()
+        optimizerP.zero_grad()
+
+        loss_fn = nn.MSELoss()
+
+        #loss1 = loss_fn(predicted[0], targets[0])
+        loss2 = loss_fn(predicted, targets)
+        #loss3 = loss_fn(predicted[2], targets[2])
+        #loss1.backward(retain_graph=True)
+        loss2.backward(retain_graph=True)
+        #loss3.backward(retain_graph=True)
+    print("Loss value:", loss2.item())
+    if config["train_config"]["train_verbal"] == True:
+        print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
+        print(f"Gradient NNd: {NNd.parameters().__next__().grad}")
+        print(f"Gradient NNp: {NNp.parameters().__next__().grad}")
+
+    return loss2.item()
+
+
+
     
 
 

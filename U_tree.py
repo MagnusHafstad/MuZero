@@ -28,7 +28,7 @@ class Tree_node():
 
 class U_tree():
     def __init__(self, abstract_state, d_max, actions):
-        self.root = Tree_node(abstract_state, None, 0, 0, "playing")
+        self.root = Tree_node(abstract_state.clone(), None, 0, 0, "playing")
         self.d_max = d_max
         self.actions = actions
         # self.game = game

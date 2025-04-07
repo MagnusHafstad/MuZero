@@ -20,6 +20,7 @@ class Reinforcement_Learning_System:
     def __init__(self, game:Callable):
         self.episode_history = []
         self.game = game
+        self.loss = []
         pass
 
     def get_episode_history(self):
@@ -58,11 +59,12 @@ class Reinforcement_Learning_System:
         plt.legend()
         plt.show()
 
-    def plot_loss(self, NNr,NNd,NNp):
-        X = np.linspace(1,len(NNr.loss), len(NNr.loss)) 
-        #plt.plot(X, NNr.loss, label = "NNr")
-        plt.plot(X, NNd.loss, label = "NNd")
-        plt.plot(X, NNp.loss, label = "NNp")
+    def plot_loss(self):#, NNr,NNd,NNp):
+        X = np.linspace(1,len(self.loss), len(self.loss)) 
+        plt.plot(self.loss)
+        # #plt.plot(X, NNr.loss, label = "NNr")
+        # plt.plot(X, NNd.loss, label = "NNd")
+        # plt.plot(X, NNp.loss, label = "NNp")
         plt.legend()
         plt.xlabel("Training session")
         plt.ylabel("Loss")
@@ -98,7 +100,7 @@ class Reinforcement_Learning_System:
         """|
         This should return the trained ANN objects for the Q-function, the policy and the value function.
         """
-        torch.autograd.set_detect_anomaly(True)
+        #torch.autograd.set_detect_anomaly(True)
         # init ANN objects
         NNr = RepresentationNetwork()
         if nn_config["representation"]["load_path"]:
@@ -143,16 +145,21 @@ class Reinforcement_Learning_System:
             self.episode_history.append(episode_data)
             #does backpropagation
             if len(self.episode_history) % config['train_config']['training_interval'] == 0:
-                do_bptt(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) ###########OBS!!!!!!!!!!!!!!
-        
+                loss = do_bptt_second(NNr, NNd, NNp, self.episode_history, config['train_config']['batch_size']) ###########OBS!!!!!!!!!!!!!!
+                self.loss.append(loss)
         return NNr, NNd, NNp
     
 system = Reinforcement_Learning_System(Snake)
 
+NNr = RepresentationNetwork()
+
+print(NNr.parameters())
+
+
 
 NNr, NNd, NNp = system.episode_loop()
 system.plot_metrics()
-system.plot_loss(NNr, NNd, NNp)
+system.plot_loss()
 
 
 
