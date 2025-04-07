@@ -167,7 +167,8 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
     print(f"Parameters NNd: {NNd.parameters().__next__()}")
     print(f"Parameters NNp: {NNp.parameters().__next__()}")
 
-
+    nn_param = list(NNr.parameters()) +list(NNd.parameters()) +list(NNp.parameters())
+    optimizer = torch.optim.SGD(nn_param, lr = 0.05)
     neural_networks = [NNr,NNd,NNp]
     for i in range(batch_size):
 
@@ -232,10 +233,7 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
         predicted_values = torch.stack(predicted_values)
         predicted_rewards = torch.stack(predicted_rewards)
 
-        predicted = [predicted_policies, predicted_values, predicted_rewards]
-
-        nn_param = list(NNr.parameters()) +list(NNd.parameters()) +list(NNp.parameters())
-        optimizer = torch.optim.SGD(nn_param, lr = 0.05)
+        predicted = [predicted_policies, predicted_values, predicted_rewards]        
         # optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.0001)
         # optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.0001)
         # optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.0001)
