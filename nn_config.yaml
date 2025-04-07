@@ -32,7 +32,7 @@ dynamics:
       dim: 16
 
 prediction:
-  learning_rate: 0.01
+  learning_rate: 0.001
   #If the load_path empty, the network will be initialized randomly. Don't include .pth
   load_path:  
   #If the save_path empty, the network will not be saved. Don't include .pth
