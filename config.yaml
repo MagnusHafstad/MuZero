@@ -1,14 +1,14 @@
 train_config:
   number_of_episodes: 20
   number_of_steps_in_episode: 50
-  number_of_MTC_simulations: 10
+  number_of_MTC_simulations: 50
   training_interval: 5
-  max_depth: 2
+  max_depth: 5
   batch_size: 5
   train_verbal: True
-  lr_NNr: 0.1
-  lr_NNd: 0.1
-  lr_NNp: 0.1
+  lr_NNr: 0.01
+  lr_NNd: 0.01
+  lr_NNp: 0.01
   look_ahead: 3
   look_back: 3
 game: snake

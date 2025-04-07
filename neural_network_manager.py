@@ -118,7 +118,6 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
         print("LossP:", lossP.item(), "LossV:", lossV.item(), "LossR:", lossR.item())
 
         loss.backward(retain_graph=False)
-        torch.nn.utils.clip_grad_norm_(nn_param, max_norm=1.0)
         optimizer.step()
         print("-------------------------------------")
 
@@ -177,7 +176,6 @@ class DynamicsNetwork(nn.Module):
         
     
     def forward(self, abstract_state, action):
-        abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
         action=torch.tensor(action, dtype=torch.float32)
         action = action.unsqueeze(1)        
         x = torch.cat([abstract_state, action], dim=-1)  # Concatenate state and action
@@ -217,7 +215,6 @@ class PredictionNetwork(nn.Module):
         self.value_activation = pick_activation_func(value_output_layer)
     
     def forward(self, abstract_state):
-        abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
         x = self.shared_fc(abstract_state)
         
         # Policy output
