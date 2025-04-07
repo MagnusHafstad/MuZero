@@ -24,7 +24,8 @@ dynamics:
   load_path:  
   #If the save_path empty, the network will not be saved. Don't include .pth
   save_path:
-  output_layer: linear
+  state_output_layer: linear
+  reward_output_layer: linear
   layers: 
     - type: relu #relu, sigmoid, softmax, linear, etc.
       dim: 16
@@ -38,7 +39,7 @@ prediction:
   #If the save_path empty, the network will not be saved. Don't include .pth
   save_path:
   policy_output_layer: softmax
-  reward_output_layer: linear
+  value_output_layer: linear
   layers: 
     - type: relu #relu, sigmoid, softmax, linear, etc.
       dim: 16
