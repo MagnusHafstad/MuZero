@@ -222,6 +222,7 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
 
         for action in look_ahead_actions:
             next_abstract_state, predicted_reward, __ = NNd(abstract_state, [action])
+            print(next_abstract_state.requires_grad)
             predicted_policy, predicted_value = NNp(next_abstract_state)
             predicted_policies.append(predicted_policy)
             predicted_rewards.append(predicted_reward)
@@ -310,7 +311,7 @@ class DynamicsNetwork(nn.Module):
     
     def forward(self, abstract_state, action):
         # Ensure state and action tensors have a batch dimension
-        abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
+        #abstract_state=torch.tensor(abstract_state, dtype=torch.float32)
         
         #abstract_state=abstract_state.view(-1)
         action=torch.tensor(action, dtype=torch.float32)
