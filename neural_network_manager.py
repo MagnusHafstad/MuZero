@@ -235,7 +235,7 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
         predicted = [predicted_policies, predicted_values, predicted_rewards]
 
         nn_param = list(NNr.parameters()) +list(NNd.parameters()) +list(NNp.parameters())
-        optimizer = torch.optim.SGD(nn_param, lr = 0.0001)
+        optimizer = torch.optim.SGD(nn_param, lr = 0.05)
         # optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.0001)
         # optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.0001)
         # optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.0001)

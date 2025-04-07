@@ -1,7 +1,7 @@
 train_config:
-  number_of_episodes: 10
+  number_of_episodes: 100
   number_of_steps_in_episode: 50
-  number_of_MTC_simulations: 10
+  number_of_MTC_simulations: 200
   training_interval: 5
   max_depth: 2
   batch_size: 5
