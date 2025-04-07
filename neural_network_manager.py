@@ -40,10 +40,10 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
     print(f"Parameters NNd: {NNd.parameters().__next__()}")
     print(f"Parameters NNp: {NNp.parameters().__next__()}")
 
-
-    neural_networks = [NNr,NNd,NNp]
+    nn_param = list(NNr.parameters()) +list(NNd.parameters()) +list(NNp.parameters())
+    optimizer = torch.optim.SGD(nn_param, lr = 0.05)
     for i in range(batch_size):
-
+        optimizer.zero_grad()
         episode, episode_idx = get_random_instance_with_idx(episode_history)#[config["train_config"]["train_interval"]:]) kan kanskje begrene til å sepå de siste episodene
         count = 0
         while len(episode) <= 1:
@@ -107,28 +107,16 @@ def do_bptt_second(NNr, NNd, NNp, episode_history, batch_size: int):
 
         predicted = [predicted_policies, predicted_values, predicted_rewards]
 
-        nn_param = list(NNr.parameters()) +list(NNd.parameters()) +list(NNp.parameters())
-        optimizer = torch.optim.SGD(nn_param, lr = 0.0001)
-        # optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.0001)
-        # optimizerD = torch.optim.SGD(NNd.parameters(), lr=0.0001)
-        # optimizerP = torch.optim.SGD(NNp.parameters(), lr=0.0001)
-        # optimizerR.zero_grad()
-        # optimizerD.zero_grad()
-        # optimizerP.zero_grad()
-        optimizer.zero_grad()
-
         loss_fn = nn.MSELoss()
-
-
         lossP = loss_fn(predicted[0], targets[0])
         lossV= loss_fn(predicted[1], targets[1])
         lossR = loss_fn(predicted[2], targets[2])
-        #loss1.backward(retain_graph=True)
-        
-        loss = lossP + lossV + lossR # + const*abs(param)**2
-        loss.backward(retain_graph=True)
+        regularization_term = sum(torch.sum(param ** 2) for param in nn_param)
+        loss = lossP + lossV + lossR + 0.01 * regularization_term
+
+        loss.backward(retain_graph=False)
         optimizer.step()
-        #loss3.backward(retain_graph=True)
+
     print("Loss value:", loss.item())
     if config["train_config"]["train_verbal"] == True:
         print(f"Gradient NNr: {NNr.parameters().__next__().grad}")
