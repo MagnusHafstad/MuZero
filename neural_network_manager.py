@@ -100,7 +100,7 @@ def do_bptt(NNr, NNd, NNp, episode_history, batch_size: int): #EP_hist: real_gam
     print("Predicted values is leaf (squeeze): ", predicted_values.is_leaf)
     
     # R NNr
-    optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.0001)
+    optimizerR = torch.optim.SGD(NNr.parameters(), lr=0.05)
     optimizerR.zero_grad()
     predicted_values = predicted_values.view(-1)
     values = values.view(-1)
